@@ -1,8 +1,221 @@
-import { Typography } from 'antd';
+import React, { useEffect, useState } from 'react';
+import {
+    Form, Select, DatePicker, Input, Button,
+    Card, Row, Col, Typography, Divider, Space, message, Spin
+} from 'antd';
+import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import dayjs from 'dayjs';
+import { createPurchaseOrder } from '../api/purchaseOrderApi';
+import { getVendors } from '../api/vendorApi';
+import { getActiveMaterials } from '../api/materialApi';
+import POItemForm from '../components/po/POItemForm';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
+const { Option } = Select;
+const { TextArea } = Input;
 
-// Placeholder — will be implemented in Phase 5
+const CURRENCIES = ['VND', 'USD', 'EUR'];
+
 export default function POCreatePage() {
-    return <Title level={2}>➕ Create Purchase Order — Coming Soon (Phase 5)</Title>;
+    const [form] = Form.useForm();
+    const navigate = useNavigate();
+    const [submitting, setSubmitting] = useState(false);
+    const [loadingData, setLoadingData] = useState(true);
+    const [vendors, setVendors] = useState([]);
+    const [materials, setMaterials] = useState([]);
+    const [grandTotal, setGrandTotal] = useState(0);
+    const [currency, setCurrency] = useState('VND');
+
+    // Load vendors and materials for dropdowns
+    useEffect(() => {
+        const loadDropdowns = async () => {
+            try {
+                const [vendorRes, matRes] = await Promise.all([
+                    getVendors({ page: 0, size: 200 }),
+                    getActiveMaterials({ page: 0, size: 500 }),
+                ]);
+                setVendors(vendorRes?.content || []);
+                setMaterials(matRes?.content || []);
+            } catch (err) {
+                console.error('Failed to load dropdowns:', err);
+                message.error('Không thể tải danh sách Nhà cung cấp / Vật tư');
+            } finally {
+                setLoadingData(false);
+            }
+        };
+        loadDropdowns();
+    }, []);
+
+    const onFinish = async (values) => {
+        try {
+            setSubmitting(true);
+
+            // Build request body according to backend API contract
+            const payload = {
+                vendorId: values.vendorId,
+                orderDate: values.orderDate ? values.orderDate.format('YYYY-MM-DD') : null,
+                expectedDeliveryDate: values.expectedDeliveryDate ? values.expectedDeliveryDate.format('YYYY-MM-DD') : null,
+                deliveryAddress: values.deliveryAddress,
+                currency: values.currency,
+                notes: values.notes,
+                items: (values.items || []).map((item) => ({
+                    materialId: item.materialId,
+                    quantity: item.quantity,
+                    unitPrice: item.unitPrice,
+                    taxRate: (item.taxRate ?? 10) / 100,
+                })),
+            };
+
+            await createPurchaseOrder(payload);
+            message.success('Đã tạo Đơn mua hàng thành công!', 2);
+            navigate('/my-orders');
+        } catch (error) {
+            console.error('Create PO error:', error);
+            message.error(error?.response?.data?.message || 'Lỗi khi tạo đơn hàng. Vui lòng thử lại.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    if (loadingData) {
+        return (
+            <div style={{ padding: '80px 0', textAlign: 'center' }}>
+                <Spin size="large" tip="Đang tải dữ liệu..." />
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ padding: '0 12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+                <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/my-orders')}>
+                    Quay lại
+                </Button>
+                <Title level={3} style={{ margin: 0 }}>Tạo Đơn mua hàng mới</Title>
+            </div>
+
+            <Form
+                form={form}
+                layout="vertical"
+                onFinish={onFinish}
+                initialValues={{
+                    currency: 'VND',
+                    orderDate: dayjs(),
+                    items: [{ taxRate: 10 }], // Start with 1 empty item row
+                }}
+                scrollToFirstError
+            >
+                {/* === SECTION 1: Header Info === */}
+                <Card title="Thông tin Đơn hàng" bordered={false} style={{ marginBottom: 16 }}>
+                    <Row gutter={[16, 0]}>
+                        {/* Vendor */}
+                        <Col xs={24} md={12}>
+                            <Form.Item
+                                name="vendorId"
+                                label="Nhà cung cấp"
+                                rules={[{ required: true, message: 'Vui lòng chọn nhà cung cấp' }]}
+                            >
+                                <Select
+                                    showSearch
+                                    placeholder="Tìm và chọn nhà cung cấp..."
+                                    optionFilterProp="label"
+                                >
+                                    {vendors.map((v) => (
+                                        <Option key={v.id} value={v.id} label={`${v.vendorCode} — ${v.vendorName}`}>
+                                            <Space direction="vertical" size={0}>
+                                                <Text strong>{v.vendorCode}</Text>
+                                                <Text type="secondary" style={{ fontSize: 12 }}>{v.vendorName}</Text>
+                                            </Space>
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+
+                        {/* Currency */}
+                        <Col xs={24} md={6}>
+                            <Form.Item
+                                name="currency"
+                                label="Đơn vị tiền tệ"
+                                rules={[{ required: true }]}
+                            >
+                                <Select onChange={(val) => setCurrency(val)}>
+                                    {CURRENCIES.map((c) => (
+                                        <Option key={c} value={c}>{c}</Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+
+                        {/* Order Date */}
+                        <Col xs={24} md={6}>
+                            <Form.Item
+                                name="orderDate"
+                                label="Ngày đặt hàng"
+                                rules={[{ required: true, message: 'Vui lòng chọn ngày đặt hàng' }]}
+                            >
+                                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
+                            </Form.Item>
+                        </Col>
+
+                        {/* Expected Delivery Date */}
+                        <Col xs={24} md={8}>
+                            <Form.Item name="expectedDeliveryDate" label="Ngày giao hàng dự kiến">
+                                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
+                            </Form.Item>
+                        </Col>
+
+                        {/* Delivery Address */}
+                        <Col xs={24} md={16}>
+                            <Form.Item name="deliveryAddress" label="Địa chỉ giao hàng">
+                                <Input placeholder="Số nhà, phường/xã, quận/huyện, tỉnh/thành phố..." />
+                            </Form.Item>
+                        </Col>
+
+                        {/* Notes */}
+                        <Col xs={24}>
+                            <Form.Item name="notes" label="Ghi chú">
+                                <TextArea rows={2} placeholder="Ghi chú thêm cho đơn hàng (tuỳ chọn)..." />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                </Card>
+
+                {/* === SECTION 2: Line Items === */}
+                <Card title="Danh sách Vật tư" bordered={false} style={{ marginBottom: 16 }}>
+                    <POItemForm
+                        materials={materials}
+                        currency={currency}
+                        onTotalChange={setGrandTotal}
+                    />
+                </Card>
+
+                {/* === SECTION 3: Grand Total Preview + Submit === */}
+                <Card bordered={false}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+                        <div>
+                            <Text type="secondary">Tổng cộng (Grand Total):</Text>
+                            <div style={{ fontSize: 24, fontWeight: 700, color: '#1677ff', marginTop: 4 }}>
+                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency }).format(grandTotal)}
+                            </div>
+                        </div>
+
+                        <Space>
+                            <Button onClick={() => navigate('/my-orders')}>Hủy bỏ</Button>
+                            <Button
+                                type="primary"
+                                htmlType="submit"
+                                icon={<SaveOutlined />}
+                                loading={submitting}
+                                size="large"
+                            >
+                                Tạo Đơn hàng
+                            </Button>
+                        </Space>
+                    </div>
+                </Card>
+            </Form>
+        </div>
+    );
 }

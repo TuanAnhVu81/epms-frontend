@@ -45,9 +45,9 @@ export default function ApprovalPage() {
                 res = await getPurchaseOrders(params);
             }
 
-            if (res.result) {
-                setData(res.result.content || []);
-                setTotal(res.result.totalElements || 0);
+            if (res) {
+                setData(res.content || []);
+                setTotal(res.totalElements || 0);
             }
         } catch (error) {
             console.error('Error fetching POs:', error);
