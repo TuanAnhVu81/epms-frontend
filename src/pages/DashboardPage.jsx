@@ -39,16 +39,6 @@ export default function DashboardPage() {
                     <Text type="secondary" style={{ fontSize: 12 }}>
                         📊 Dashboard (Phase 3) — sẽ có charts và KPI cards
                     </Text>
-
-                    {/* Temporary logout button — Phase 2 sẽ có trong AppLayout Header */}
-                    <Button
-                        type="default"
-                        danger
-                        icon={<LogoutOutlined />}
-                        onClick={handleLogout}
-                    >
-                        Đăng xuất
-                    </Button>
                 </Space>
             </Card>
         </div>

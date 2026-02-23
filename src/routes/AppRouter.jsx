@@ -13,6 +13,19 @@ import POEditPage from '../pages/POEditPage';
 import PODetailPage from '../pages/PODetailPage';
 import ApprovalPage from '../pages/ApprovalPage';
 import { ROLES } from '../utils/constants';
+import { useAuthStore } from '../store/authStore';
+
+// Thông minh chuyển hướng khi vào URL gốc "/"
+const RootRedirect = () => {
+    const user = useAuthStore(s => s.user);
+    if (user?.roles?.includes(ROLES.ADMIN) || user?.roles?.includes(ROLES.MANAGER)) {
+        return <Navigate to="/dashboard" replace />;
+    }
+    if (user?.roles?.includes(ROLES.EMPLOYEE)) {
+        return <Navigate to="/my-orders" replace />;
+    }
+    return <Navigate to="/login" replace />;
+};
 
 export default function AppRouter() {
     return (
@@ -25,9 +38,13 @@ export default function AppRouter() {
             <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
 
-                    {/* Root → redirect to dashboard */}
-                    <Route index element={<Navigate to="/dashboard" replace />} />
-                    <Route path="/dashboard" element={<DashboardPage />} />
+                    {/* Root → redirect dựa vào role */}
+                    <Route index element={<RootRedirect />} />
+
+                    {/* ADMIN & MANAGER routes (Dashboards) */}
+                    <Route element={<RoleGuard roles={[ROLES.ADMIN, ROLES.MANAGER]} />}>
+                        <Route path="/dashboard" element={<DashboardPage />} />
+                    </Route>
 
                     {/* ADMIN only routes */}
                     <Route element={<RoleGuard roles={[ROLES.ADMIN]} />}>

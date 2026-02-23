@@ -24,7 +24,7 @@ export default function LoginPage() {
 
             login(result.token);  // decode JWT and store roles in Zustand
             message.success('Đăng nhập thành công!');
-            navigate('/dashboard', { replace: true });
+            navigate('/', { replace: true });
 
         } catch (error) {
             // Network error: backend not running or CORS blocked
