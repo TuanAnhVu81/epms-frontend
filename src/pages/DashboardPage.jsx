@@ -76,14 +76,15 @@ export default function DashboardPage() {
     const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
     const formatCompact = (val) => new Intl.NumberFormat('vi-VN', { notation: "compact" }).format(val || 0);
 
+    // Dùng mã màu hex riêng biệt cho từng trạng thái trên biểu đồ
     const getStatusColor = (status) => {
-        const config = PO_STATUS_CONFIG[status];
-        switch (config?.color) {
-            case 'success': return '#52c41a';
-            case 'warning': return '#faad14';
-            case 'error': return '#ff4d4f';
-            case 'default':
-            default: return '#d9d9d9';
+        switch (status) {
+            case 'APPROVED': return '#52c41a';    // Xanh lá (rõ)
+            case 'PENDING': return '#faad14';     // Vàng cam
+            case 'REJECTED': return '#ff4d4f';    // Đỏ
+            case 'CREATED': return '#1677ff';     // Xanh dương (Thay vì xám để dễ phân biệt với hủy)
+            case 'CANCELLED': return '#bfbfbf';   // Xám
+            default: return '#d9d9d9';            // Dự phòng
         }
     };
 
@@ -100,9 +101,9 @@ export default function DashboardPage() {
         value: v.totalPurchaseValue,
     }));
 
-    // 4. Prepare Line Chart (Monthly Trend)
+    // 4. Prepare Line Chart (Daily Trend)
     const lineData = monthlyTrend.map((m) => ({
-        name: `${m.month}/${m.year}`,
+        name: m.monthName, // Backend is now sending "DD/MM" in this field instead
         amount: m.totalValue,
         count: m.totalOrders,
     }));
@@ -222,9 +223,9 @@ export default function DashboardPage() {
                     </Card>
                 </Col>
 
-                {/* Row 3: Monthly Trend Line Chart */}
+                {/* Row 3: Daily Trend Line Chart */}
                 <Col xs={24}>
-                    <Card title="Xu hướng Mua hàng theo thời gian (6 tháng)" bordered={false} hoverable loading={loading} style={{ marginTop: 16 }}>
+                    <Card title="Xu hướng Mua hàng theo thời gian (14 ngày gần nhất)" bordered={false} hoverable loading={loading} style={{ marginTop: 16 }}>
                         {monthlyTrend.length > 0 ? (
                             <ResponsiveContainer width="100%" height={350}>
                                 <LineChart data={lineData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
