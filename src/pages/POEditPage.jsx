@@ -55,7 +55,7 @@ export default function POEditPage() {
                         vendorId: poRes.vendorId,
                         currency: poRes.currency,
                         orderDate: poRes.orderDate ? dayjs(poRes.orderDate) : null,
-                        expectedDeliveryDate: poRes.expectedDeliveryDate ? dayjs(poRes.expectedDeliveryDate) : null,
+                        deliveryDate: poRes.deliveryDate ? dayjs(poRes.deliveryDate) : null,
                         deliveryAddress: poRes.deliveryAddress,
                         notes: poRes.notes,
                         // Map existing line items to form structure
@@ -92,7 +92,7 @@ export default function POEditPage() {
             const payload = {
                 vendorId: values.vendorId,
                 orderDate: values.orderDate ? values.orderDate.format('YYYY-MM-DD') : null,
-                expectedDeliveryDate: values.expectedDeliveryDate ? values.expectedDeliveryDate.format('YYYY-MM-DD') : null,
+                deliveryDate: values.deliveryDate ? values.deliveryDate.format('YYYY-MM-DD') : null,
                 deliveryAddress: values.deliveryAddress,
                 currency: values.currency,
                 notes: values.notes,
@@ -205,9 +205,9 @@ export default function POEditPage() {
                                 <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
                             </Form.Item>
                         </Col>
-
+                        {/* Delivery Date */}
                         <Col xs={24} md={8}>
-                            <Form.Item name="expectedDeliveryDate" label="Ngày giao hàng dự kiến">
+                            <Form.Item name="deliveryDate" label="Ngày giao hàng dự kiến">
                                 <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
                             </Form.Item>
                         </Col>

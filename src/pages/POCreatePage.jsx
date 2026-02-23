@@ -55,7 +55,7 @@ export default function POCreatePage() {
             const payload = {
                 vendorId: values.vendorId,
                 orderDate: values.orderDate ? values.orderDate.format('YYYY-MM-DD') : null,
-                expectedDeliveryDate: values.expectedDeliveryDate ? values.expectedDeliveryDate.format('YYYY-MM-DD') : null,
+                deliveryDate: values.deliveryDate ? values.deliveryDate.format('YYYY-MM-DD') : null,
                 deliveryAddress: values.deliveryAddress,
                 currency: values.currency,
                 notes: values.notes,
@@ -159,9 +159,9 @@ export default function POCreatePage() {
                             </Form.Item>
                         </Col>
 
-                        {/* Expected Delivery Date */}
+                        {/* Delivery Date */}
                         <Col xs={24} md={8}>
-                            <Form.Item name="expectedDeliveryDate" label="Ngày giao hàng dự kiến">
+                            <Form.Item name="deliveryDate" label="Ngày giao hàng dự kiến">
                                 <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
                             </Form.Item>
                         </Col>
