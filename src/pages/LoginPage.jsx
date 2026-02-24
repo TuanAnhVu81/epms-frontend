@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Form, Input, Button, Card, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined, LoginOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
@@ -12,13 +13,17 @@ export default function LoginPage() {
     const navigate = useNavigate();
     const login = useAuthStore((s) => s.login);
 
+    const [loading, setLoading] = useState(false);
+
     // Handle form submission: call login API then save token
     const onFinish = async (values) => {
         try {
+            setLoading(true);
             const result = await loginApi(values);  // returns { token, expiresIn }
 
             if (!result?.token) {
                 message.error('Lỗi: Server không trả về token!');
+                setLoading(false);
                 return;
             }
 
@@ -27,6 +32,7 @@ export default function LoginPage() {
             navigate('/', { replace: true });
 
         } catch (error) {
+            setLoading(false);
             // Network error: backend not running or CORS blocked
             if (!error.response) {
                 message.error(
@@ -89,6 +95,7 @@ export default function LoginPage() {
                             htmlType="submit"
                             icon={<LoginOutlined />}
                             block
+                            loading={loading}
                         >
                             Đăng nhập
                         </Button>

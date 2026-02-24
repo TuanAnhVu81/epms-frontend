@@ -20,9 +20,18 @@ const ERROR_MESSAGES = {
 
 // Show an error message toast based on the API error response
 export function handleApiError(error) {
-  const code = error?.response?.data?.code;
-  const msg = ERROR_MESSAGES[code]
-    || error?.response?.data?.message
-    || 'Đã xảy ra lỗi, vui lòng thử lại.';
+  const data = error?.response?.data;
+  const code = data?.code;
+  
+  let msg = '';
+  
+  if (code === 1001 && data?.message) {
+    // 1001 is generic 'Invalid Key' in BE, but message contains specific validation detail
+    msg = data.message;
+  } else {
+    // Use mapped Vietnamese message if exists, otherwise fallback to BE message or generic
+    msg = ERROR_MESSAGES[code] || data?.message || 'Đã xảy ra lỗi, vui lòng thử lại.';
+  }
+
   message.error(msg);
 }
