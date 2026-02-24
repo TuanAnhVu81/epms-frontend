@@ -7,17 +7,23 @@ import RegisterPage from '../pages/RegisterPage';
 import DashboardPage from '../pages/DashboardPage';
 import VendorPage from '../pages/VendorPage';
 import MaterialPage from '../pages/MaterialPage';
+import UserManagementPage from '../pages/UserManagementPage';
 import PurchaseOrderPage from '../pages/PurchaseOrderPage';
 import POCreatePage from '../pages/POCreatePage';
 import POEditPage from '../pages/POEditPage';
 import PODetailPage from '../pages/PODetailPage';
 import ApprovalPage from '../pages/ApprovalPage';
+import ChangePasswordPage from '../pages/ChangePasswordPage';
 import { ROLES } from '../utils/constants';
 import { useAuthStore } from '../store/authStore';
 
-// Thông minh chuyển hướng khi vào URL gốc "/"
+// Smart redirect based on role and requirePasswordChange flag
 const RootRedirect = () => {
     const user = useAuthStore(s => s.user);
+    // Force first-time password change
+    if (user?.requirePasswordChange) {
+        return <Navigate to="/change-password" replace />;
+    }
     if (user?.roles?.includes(ROLES.ADMIN) || user?.roles?.includes(ROLES.MANAGER)) {
         return <Navigate to="/dashboard" replace />;
     }
@@ -27,6 +33,15 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
 };
 
+// Guard: if requirePasswordChange, force to /change-password even on direct navigation
+const RequirePasswordChangeGuard = ({ children }) => {
+    const user = useAuthStore(s => s.user);
+    if (user?.requirePasswordChange) {
+        return <Navigate to="/change-password" replace />;
+    }
+    return children;
+};
+
 export default function AppRouter() {
     return (
         <Routes>
@@ -34,11 +49,16 @@ export default function AppRouter() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
+            {/* Force password change — authenticated but isolated (no AppLayout) */}
+            <Route element={<ProtectedRoute />}>
+                <Route path="/change-password" element={<ChangePasswordPage />} />
+            </Route>
+
             {/* Protected routes — must be authenticated */}
             <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
 
-                    {/* Root → redirect dựa vào role */}
+                    {/* Root → redirect based on role */}
                     <Route index element={<RootRedirect />} />
 
                     {/* ADMIN & MANAGER routes (Dashboards) */}
@@ -50,6 +70,7 @@ export default function AppRouter() {
                     <Route element={<RoleGuard roles={[ROLES.ADMIN]} />}>
                         <Route path="/vendors" element={<VendorPage />} />
                         <Route path="/materials" element={<MaterialPage />} />
+                        <Route path="/users" element={<UserManagementPage />} />
                     </Route>
 
                     {/* EMPLOYEE only routes */}
@@ -75,3 +96,4 @@ export default function AppRouter() {
         </Routes>
     );
 }
+

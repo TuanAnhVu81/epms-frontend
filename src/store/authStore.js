@@ -9,7 +9,7 @@ export const useAuthStore = create(
       token: null,
       user: null, // shape: { username: string, roles: string[] }
 
-      // login: decode JWT and extract username + roles
+      // login: decode JWT and extract username + roles + requirePasswordChange flag
       login: (token) => {
         const decoded = jwtDecode(token);
 
@@ -26,7 +26,12 @@ export const useAuthStore = create(
 
         set({
           token,
-          user: { username: decoded.sub, roles },
+          user: {
+            username: decoded.sub,
+            roles,
+            // Flag set by backend when Admin creates account with default password
+            requirePasswordChange: decoded.requirePasswordChange === true,
+          },
         });
       },
 

@@ -1,7 +1,7 @@
 import { Menu, Layout } from 'antd';
 import {
     DashboardOutlined, ShopOutlined, AppstoreOutlined,
-    FileTextOutlined, CheckCircleOutlined,
+    FileTextOutlined, CheckCircleOutlined, TeamOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
@@ -25,6 +25,7 @@ export default function Sidebar({ collapsed }) {
         // ADMIN menus
         isAdmin && { key: '/vendors', icon: <ShopOutlined />, label: 'Nhà cung cấp' },
         isAdmin && { key: '/materials', icon: <AppstoreOutlined />, label: 'Vật tư' },
+        isAdmin && { key: '/users', icon: <TeamOutlined />, label: 'Quản lý Nhân viên' },
 
         // EMPLOYEE menus
         isEmployee && { key: '/my-orders', icon: <FileTextOutlined />, label: 'Quản lý PO (Employee)' },

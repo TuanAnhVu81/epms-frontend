@@ -169,7 +169,7 @@ export default function DashboardPage() {
                 {/* Row 2 - Left: PO Status Donut Chart */}
                 <Col xs={24} lg={8}>
                     <Card title="Phân bổ trạng thái P.O (Số lượng)" bordered={false} hoverable loading={loading} style={{ height: '100%' }}>
-                        {statusSummary.length > 0 ? (
+                        {statusSummary.length > 0 && totalOrders > 0 ? (
                             <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>
                                     <Pie
