@@ -370,7 +370,6 @@ export default function UserManagementPage() {
                                         <Select placeholder="Chọn Role...">
                                             <Option value="ROLE_EMPLOYEE">Employee (Nhân viên)</Option>
                                             <Option value="ROLE_MANAGER">Manager (Quản lý)</Option>
-                                            <Option value="ROLE_ADMIN">Admin</Option>
                                         </Select>
                                     </Form.Item>
                                 </Col>
@@ -416,7 +415,6 @@ export default function UserManagementPage() {
                         <Select>
                             <Option value="ROLE_EMPLOYEE">Employee (Nhân viên)</Option>
                             <Option value="ROLE_MANAGER">Manager (Quản lý)</Option>
-                            <Option value="ROLE_ADMIN">Admin</Option>
                         </Select>
                     </Form.Item>
                 </Form>
