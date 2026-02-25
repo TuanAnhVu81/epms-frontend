@@ -13,7 +13,9 @@ import {
     ResponsiveContainer
 } from 'recharts';
 import { getDashboard } from '../api/analyticsApi';
-import { PO_STATUS_CONFIG } from '../utils/constants';
+import { PO_STATUS_CONFIG, ROLES } from '../utils/constants';
+import { useAuthStore } from '../store/authStore';
+import LowStockWidget from '../components/material/LowStockWidget';
 
 const { Title } = Typography;
 
@@ -26,6 +28,9 @@ export default function DashboardPage() {
         topVendors: [],
         monthlyTrend: [],
     });
+    const user = useAuthStore((s) => s.user);
+    // Show LowStockWidget only for privileged roles (Admin/Manager)
+    const canSeeInventory = user?.roles?.some((r) => [ROLES.ADMIN, ROLES.MANAGER].includes(r));
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -284,6 +289,9 @@ export default function DashboardPage() {
                     </Card>
                 </Col>
             </Row>
+
+            {/* Row 4: Low Stock Alerts — only visible for Admin and Manager */}
+            {canSeeInventory && <LowStockWidget />}
         </div>
     );
 }

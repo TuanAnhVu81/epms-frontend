@@ -41,3 +41,8 @@ export const searchPurchaseOrders = (keyword, params) =>
 // GET /api/purchase-orders/status/:status — filter by status
 export const getPurchaseOrdersByStatus = (status, params) =>
   axiosClient.get(`${BASE}/status/${status}`, { params }).then((r) => r.data);
+
+// POST /api/purchase-orders/:id/receive — confirm goods receipt (EMPLOYEE, status APPROVED → RECEIVED)
+export const receiveGoods = (id) =>
+  axiosClient.post(`${BASE}/${id}/receive`).then((r) => r.data.result);
+

@@ -5,7 +5,7 @@ import {
 } from 'antd';
 import {
     ArrowLeftOutlined, SendOutlined, CheckCircleOutlined,
-    CloseCircleOutlined, DeleteOutlined, EditOutlined
+    CloseCircleOutlined, DeleteOutlined, EditOutlined, TruckOutlined
 } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
@@ -15,6 +15,7 @@ import {
     approvePurchaseOrder,
     rejectPurchaseOrder,
     deletePurchaseOrder,
+    receiveGoods,
 } from '../api/purchaseOrderApi';
 import { PO_STATUS_CONFIG, ROLES } from '../utils/constants';
 import { useAuthStore } from '../store/authStore';
@@ -127,6 +128,20 @@ export default function PODetailPage() {
         }
     };
 
+    // Handle goods receipt confirmation (EMPLOYEE, APPROVED → RECEIVED)
+    const handleReceive = async () => {
+        try {
+            setActionLoading(true);
+            await receiveGoods(id);
+            message.success('Xác nhận nhận hàng thành công! Tồn kho đã được cập nhật.');
+            loadPO(); // Refresh to show RECEIVED status
+        } catch (err) {
+            message.error(err?.response?.data?.message || 'Lỗi khi xác nhận nhận hàng');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     // ─── Loading / error states ────────────────────────────────────────────────
 
     if (loading) {
@@ -161,6 +176,8 @@ export default function PODetailPage() {
     const canDelete = (isEmployee && isCreator && isCreated) || isAdmin;
     const canApprove = isManager && isPending;
     const canReject = isManager && isPending;
+    // EMPLOYEE can confirm goods receipt when the PO is APPROVED
+    const canReceive = isEmployee && po.status === 'APPROVED';
 
     // ─── Line items table columns ──────────────────────────────────────────────
     const itemColumns = [
@@ -307,6 +324,30 @@ export default function PODetailPage() {
                         >
                             Từ chối
                         </Button>
+                    )}
+                    {/* EMPLOYEE receives goods when status is APPROVED */}
+                    {canReceive && (
+                        <Popconfirm
+                            title="Xác nhận Nhận hàng?"
+                            description={
+                                <span style={{ maxWidth: 300, display: 'block' }}>
+                                    Hành động này sẽ cập nhật trực tiếp vào số lượng tồn kho của hệ thống.
+                                    Bạn có chắc chắn hàng đã về đầy đủ?
+                                </span>
+                            }
+                            onConfirm={handleReceive}
+                            okText="Xác nhận nhận hàng"
+                            cancelText="Hủy"
+                            okButtonProps={{ style: { background: '#13c2c2', borderColor: '#13c2c2' } }}
+                        >
+                            <Button
+                                style={{ background: '#13c2c2', borderColor: '#13c2c2', color: '#fff' }}
+                                icon={<TruckOutlined />}
+                                loading={actionLoading}
+                            >
+                                Xác nhận Nhận hàng
+                            </Button>
+                        </Popconfirm>
                     )}
                     {canDelete && (
                         <Popconfirm

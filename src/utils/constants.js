@@ -1,11 +1,13 @@
 // PO Status → Ant Design Tag color + label + icon
 export const PO_STATUS_CONFIG = {
-  CREATED:   { color: 'default', label: 'Draft',            icon: '📝' },
-  PENDING:   { color: 'warning', label: 'Pending Approval', icon: '⏳' },
-  APPROVED:  { color: 'success', label: 'Approved',         icon: '✅' },
-  REJECTED:  { color: 'error',   label: 'Rejected',         icon: '❌' },
-  CANCELLED: { color: 'default', label: 'Cancelled',        icon: '🚫' },
+  CREATED:   { color: 'default',    label: 'Draft',            icon: '📝' },
+  PENDING:   { color: 'warning',    label: 'Pending Approval', icon: '⏳' },
+  APPROVED:  { color: 'success',    label: 'Approved',         icon: '✅' },
+  RECEIVED:  { color: 'processing', label: 'Received',         icon: '📦' },
+  REJECTED:  { color: 'error',      label: 'Rejected',         icon: '❌' },
+  CANCELLED: { color: 'default',    label: 'Cancelled',        icon: '🚫' },
 };
+
 
 // VendorCategory → Display label
 export const VENDOR_CATEGORY_LABELS = {

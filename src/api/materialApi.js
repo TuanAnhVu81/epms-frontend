@@ -25,3 +25,14 @@ export const updateMaterial = (id, data) =>
 // DELETE /api/materials/:id — soft delete material (ADMIN only)
 export const deleteMaterial = (id) =>
   axiosClient.delete(`${BASE}/${id}`);
+
+// GET /api/materials/:id/stock — get inventory/stock info for a material
+// Returns: quantityOnHand, reservedQuantity, availableQuantity, minimumStockLevel, lowStock, warehouseLocation
+// On 404 (new material with no stock record yet): caller should handle and default to 0
+export const getMaterialStock = (id) =>
+  axiosClient.get(`${BASE}/${id}/stock`).then((r) => r.data.result);
+
+// GET /api/materials/stock/low — get all materials with low stock (for ADMIN/MANAGER dashboard)
+export const getLowStockMaterials = () =>
+  axiosClient.get(`${BASE}/stock/low`).then((r) => r.data.result ?? r.data);
+

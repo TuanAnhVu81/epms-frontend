@@ -7,7 +7,7 @@ import {
 import {
     PlusOutlined, EditOutlined, DeleteOutlined,
     SearchOutlined, ReloadOutlined, AppstoreOutlined,
-    CheckCircleOutlined, StopOutlined,
+    CheckCircleOutlined, StopOutlined, InboxOutlined,
 } from '@ant-design/icons';
 import {
     getMaterials,
@@ -16,6 +16,7 @@ import {
     deleteMaterial,
 } from '../api/materialApi';
 import { MATERIAL_TYPE_LABELS } from '../utils/constants';
+import MaterialStockCard from '../components/material/MaterialStockCard';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -37,6 +38,8 @@ export default function MaterialPage() {
     const [formModal, setFormModal] = useState({ open: false, record: null });
     const [formLoading, setFormLoading] = useState(false);
     const [form] = Form.useForm();
+    // Stock viewer modal state
+    const [stockModal, setStockModal] = useState({ open: false, record: null });
 
     // ── Fetch materials ──────────────────────────────────────────────────────
     const fetchMaterials = useCallback(async () => {
@@ -191,6 +194,13 @@ export default function MaterialPage() {
                     <Tooltip title="Chỉnh sửa">
                         <Button size="small" icon={<EditOutlined />} onClick={() => openFormModal(record)} />
                     </Tooltip>
+                    <Tooltip title="Xem tồn kho">
+                        <Button
+                            size="small"
+                            icon={<InboxOutlined style={{ color: '#13c2c2' }} />}
+                            onClick={() => setStockModal({ open: true, record })}
+                        />
+                    </Tooltip>
                     <Popconfirm
                         title="Xóa / Tắt hoạt động?"
                         description="Vật tư sẽ bị đánh dấu Inactive (soft delete)."
@@ -207,6 +217,11 @@ export default function MaterialPage() {
             ),
         },
     ];
+
+    // ── Stock Modal footer helper ─────────────────────────────────────────────
+    const stockModalTitle = stockModal.record
+        ? `Tồn kho: ${stockModal.record.materialCode} — ${stockModal.record.description}`
+        : 'Thông tin Tồn kho';
 
     return (
         <div style={{ padding: '0 12px' }}>
@@ -373,6 +388,23 @@ export default function MaterialPage() {
                         </Col>
                     </Row>
                 </Form>
+            </Modal>
+
+            {/* ══════════════════════════════════════════════════════════════
+                Stock Info Modal — shows live inventory for selected material
+            ══════════════════════════════════════════════════════════════ */}
+            <Modal
+                title={stockModalTitle}
+                open={stockModal.open}
+                onCancel={() => setStockModal({ open: false, record: null })}
+                footer={null}
+                centered
+                width={600}
+                destroyOnClose
+            >
+                {stockModal.record && (
+                    <MaterialStockCard materialId={stockModal.record.id} />
+                )}
             </Modal>
         </div>
     );
