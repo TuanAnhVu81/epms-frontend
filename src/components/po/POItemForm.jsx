@@ -51,7 +51,7 @@ export default function POItemForm({ materials = [], currency = 'VND', onTotalCh
         const material = materials.find((m) => m.id === materialId);
         if (material) {
             const items = form.getFieldValue('items') || [];
-            items[index] = { ...items[index], unit: material.unitOfMeasure };
+            items[index] = { ...items[index], unit: material.unit || material.unitOfMeasure };
             form.setFieldValue('items', items);
         }
     };
@@ -122,14 +122,15 @@ export default function POItemForm({ materials = [], currency = 'VND', onTotalCh
                                                     <Option
                                                         key={m.id}
                                                         value={m.id}
-                                                        label={`${m.materialCode} — ${m.materialDescription}`}
+                                                        label={`${m.materialCode} — ${m.description || m.materialDescription}`}
                                                     >
-                                                        <Space direction="vertical" size={0}>
+                                                        <div>
                                                             <Text strong>{m.materialCode}</Text>
+                                                            <br />
                                                             <Text type="secondary" style={{ fontSize: 12 }}>
-                                                                {m.materialDescription} ({m.unitOfMeasure})
+                                                                {m.description || m.materialDescription} - ĐVT: {m.unit || m.unitOfMeasure}
                                                             </Text>
-                                                        </Space>
+                                                        </div>
                                                     </Option>
                                                 ))}
                                             </Select>
