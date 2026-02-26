@@ -186,7 +186,7 @@ export default function POCreatePage() {
                 <Card title="Danh sách Vật tư" bordered={false} style={{ marginBottom: 16 }}>
                     <POItemForm
                         materials={materials}
-                        currency={currency}
+                        poCurrency={currency}
                         onTotalChange={setGrandTotal}
                     />
                 </Card>

@@ -8,17 +8,18 @@ import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 const { Text } = Typography;
 const { Option } = Select;
 
-const formatVND = (val) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
+// Format currency dynamically based on PO's currency
+const formatAmount = (val, currency = 'VND') =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency }).format(val || 0);
 
 /**
  * POItemForm — dynamic Form.List for PO line items.
  * Props:
- *   - materials: array of { id, materialCode, materialDescription, unitOfMeasure }
- *   - currency: string (VND | USD | EUR)
+ *   - materials: array of { id, materialCode, description/materialDescription, unit/unitOfMeasure, basePrice, currency }
+ *   - poCurrency: string (VND | USD | EUR) — the currency of the current PO
  *   - onTotalChange(grandTotal): callback to parent to show grand total preview
  */
-export default function POItemForm({ materials = [], currency = 'VND', onTotalChange }) {
+export default function POItemForm({ materials = [], poCurrency = 'VND', onTotalChange }) {
     const form = Form.useFormInstance();
 
     // Calculate line total whenever a field in an item changes
@@ -47,12 +48,22 @@ export default function POItemForm({ materials = [], currency = 'VND', onTotalCh
     };
 
     const handleMaterialSelect = (materialId, index) => {
-        // Auto-fill unit from selected material metadata
+        // Auto-fill unit AND suggest basePrice from material catalog
         const material = materials.find((m) => m.id === materialId);
         if (material) {
             const items = form.getFieldValue('items') || [];
-            items[index] = { ...items[index], unit: material.unit || material.unitOfMeasure };
+            items[index] = {
+                ...items[index],
+                unit: material.unit || material.unitOfMeasure,
+                // Auto-suggest catalog price; user can override
+                unitPrice: material.basePrice ?? items[index]?.unitPrice,
+                // Store catalog currency for mismatch warning display
+                _catalogCurrency: material.currency || 'VND',
+                _catalogPrice: material.basePrice,
+            };
             form.setFieldValue('items', items);
+            // Trigger recalculation since price was just changed
+            recalculate(index);
         }
     };
 
@@ -163,7 +174,26 @@ export default function POItemForm({ materials = [], currency = 'VND', onTotalCh
                                         <Form.Item
                                             {...restField}
                                             name={[name, 'unitPrice']}
-                                            label="Đơn giá"
+                                            label={
+                                                // Show catalog reference price hint if available
+                                                (() => {
+                                                    const catalogPrice = item._catalogPrice;
+                                                    const catalogCurrency = item._catalogCurrency;
+                                                    const hasMismatch = catalogCurrency && catalogCurrency !== poCurrency;
+                                                    if (catalogPrice != null) {
+                                                        return (
+                                                            <span>
+                                                                Đơn giá&nbsp;
+                                                                <Text type={hasMismatch ? 'warning' : 'secondary'} style={{ fontSize: 11 }}>
+                                                                    (gốc: {formatAmount(catalogPrice, catalogCurrency || poCurrency)})
+                                                                    {hasMismatch && ` ⚠️ khác tiền PO (${poCurrency})`}
+                                                                </Text>
+                                                            </span>
+                                                        );
+                                                    }
+                                                    return 'Đơn giá';
+                                                })()
+                                            }
                                             rules={[
                                                 { required: true, message: 'Bắt buộc' },
                                                 { type: 'number', min: 0, message: 'Phải >= 0' },
@@ -206,13 +236,13 @@ export default function POItemForm({ materials = [], currency = 'VND', onTotalCh
                                 <div style={{ background: '#f0f5ff', borderRadius: 6, padding: '6px 12px' }}>
                                     <Space size="large">
                                         <Text type="secondary" style={{ fontSize: 12 }}>
-                                            Tiền hàng: <strong>{formatVND(netAmt)}</strong>
+                                            Tiền hàng: <strong>{formatAmount(netAmt, poCurrency)}</strong>
                                         </Text>
                                         <Text type="secondary" style={{ fontSize: 12 }}>
-                                            Thuế: <strong>{formatVND(taxAmt)}</strong>
+                                            Thuế: <strong>{formatAmount(taxAmt, poCurrency)}</strong>
                                         </Text>
                                         <Text style={{ fontSize: 13, color: '#1677ff' }}>
-                                            Thành tiền: <strong>{formatVND(lineTotal)}</strong>
+                                            Thành tiền: <strong>{formatAmount(lineTotal, poCurrency)}</strong>
                                         </Text>
                                     </Space>
                                 </div>
