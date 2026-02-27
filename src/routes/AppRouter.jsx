@@ -3,7 +3,6 @@ import ProtectedRoute from './ProtectedRoute';
 import RoleGuard from './RoleGuard';
 import AppLayout from '../components/layout/AppLayout';
 import LoginPage from '../pages/LoginPage';
-import RegisterPage from '../pages/RegisterPage';
 import DashboardPage from '../pages/DashboardPage';
 import VendorPage from '../pages/VendorPage';
 import MaterialPage from '../pages/MaterialPage';
@@ -45,9 +44,7 @@ const RequirePasswordChangeGuard = ({ children }) => {
 export default function AppRouter() {
     return (
         <Routes>
-            {/* Public routes — no auth required */}
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
 
             {/* Force password change — authenticated but isolated (no AppLayout) */}
             <Route element={<ProtectedRoute />}>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Card, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined, LoginOutlined } from '@ant-design/icons';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { loginApi } from '../api/authApi';
 import { useAuthStore } from '../store/authStore';
 import { handleApiError } from '../utils/errorHandler';
@@ -102,12 +102,6 @@ export default function LoginPage() {
                     </Form.Item>
                 </Form>
 
-                {/* Register link */}
-                <div style={styles.footer}>
-                    <Text type="secondary">Chưa có tài khoản? </Text>
-                    <Link to="/register">Đăng ký ngay</Link>
-                </div>
-
                 {/* Demo credentials hint */}
                 <div style={styles.hint}>
                     <Text type="secondary" style={{ fontSize: 12 }}>
@@ -157,10 +151,6 @@ const styles = {
     title: {
         marginBottom: 4,
         marginTop: 0,
-    },
-    footer: {
-        textAlign: 'center',
-        marginTop: 8,
     },
     hint: {
         textAlign: 'center',
