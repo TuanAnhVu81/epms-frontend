@@ -1,20 +1,21 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Table, Button, Space, Tag, Modal, Form, Input, Select,
     InputNumber, message, Popconfirm, Typography, Card,
-    Row, Col, Tooltip, Switch, Divider,
+    Row, Col, Tooltip, Switch, Divider, Alert,
 } from 'antd';
 import {
     PlusOutlined, EditOutlined, DeleteOutlined,
     SearchOutlined, ReloadOutlined, AppstoreOutlined,
     CheckCircleOutlined, StopOutlined, InboxOutlined,
+    ThunderboltOutlined,
 } from '@ant-design/icons';
 import {
-    getMaterials,
     createMaterial,
     updateMaterial,
     deleteMaterial,
 } from '../api/materialApi';
+import { queryMaterialsOData } from '../api/odataApi';
 import { MATERIAL_TYPE_LABELS } from '../utils/constants';
 import MaterialStockCard from '../components/material/MaterialStockCard';
 
@@ -23,75 +24,151 @@ const { Option } = Select;
 const { TextArea } = Input;
 
 // Format currency helper
-const formatCurrency = (val) =>
-    val != null ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val) : '—';
+const formatCurrency = (val, currency = 'VND') =>
+    val != null ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency }).format(val) : '—';
 
+/**
+ * Build OData $filter string for Material queries.
+ * Combines isActive and keyword into a single OData expression.
+ *
+ * Examples:
+ *   (active=true, kw='thép')  → "isActive eq true and contains(description, 'thép')"
+ *   (active=true, kw='')      → "isActive eq true"
+ *   (active=null, kw='thép')  → "contains(description, 'thép') or contains(materialCode, 'thép')"
+ *   (active=null, kw='')      → null (no filter → fetch all)
+ */
+function buildMaterialFilter(active, kw) {
+    const parts = [];
+    // isActive filter: isActive eq true / isActive eq false
+    if (active !== null && active !== undefined) {
+        parts.push(`isActive eq ${active}`);
+    }
+    // Keyword: search across description and materialCode
+    if (kw && kw.trim()) {
+        const escaped = kw.trim().replace(/'/g, "''"); // Escape single quotes
+        parts.push(`(contains(description, '${escaped}') or contains(materialCode, '${escaped}'))`);
+    }
+    return parts.length > 0 ? parts.join(' and ') : null;
+}
+
+/**
+ * MaterialPage — Refactored to use OData V4 API
+ *   ✅ Pagination       → $top / $skip
+ *   ✅ Inline count     → $count=true
+ *   ✅ Sort by column   → $orderby=basePrice desc / description asc
+ *   ✅ Active filter    → $filter=isActive eq true/false
+ *   ✅ Keyword search   → $filter=contains(description,'kw') or contains(materialCode,'kw')
+ *   ✅ Combined         → $filter=isActive eq true and contains(description,'thép')
+ *
+ * OData endpoint: GET /odata/Materials?$top=...&$skip=...&$count=true&$orderby=...&$filter=...
+ */
 export default function MaterialPage() {
+    // ── Data state ──────────────────────────────────────────────────────────
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [total, setTotal] = useState(0);
-    const [page, setPage] = useState(0);
-    const [pageSize, setPageSize] = useState(10);
-    const [filterActive, setFilterActive] = useState(null); // null = all
+    const [odataError, setOdataError] = useState(false);
 
-    // Form modal state
+    // ── OData query parameters ──────────────────────────────────────────────
+    const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
+    const [sorter, setSorter] = useState(null);
+    const [activeFilter, setActiveFilter] = useState(null); // null=all, true=active, false=inactive
+    const [keyword, setKeyword] = useState('');
+
+    // ── Form modal state ────────────────────────────────────────────────────
     const [formModal, setFormModal] = useState({ open: false, record: null });
     const [formLoading, setFormLoading] = useState(false);
     const [form] = Form.useForm();
-    // Stock viewer modal state
+    // ── Stock viewer modal state ────────────────────────────────────────────
     const [stockModal, setStockModal] = useState({ open: false, record: null });
 
-    // ── Fetch materials ──────────────────────────────────────────────────────
-    const fetchMaterials = useCallback(async () => {
+    // ── Fetch materials via OData ───────────────────────────────────────────
+    const fetchMaterials = async ({
+        page = pagination.current,
+        pageSize = pagination.pageSize,
+        sort = sorter,
+        active = activeFilter,
+        kw = keyword,
+    } = {}) => {
         try {
             setLoading(true);
-            // Pass active filter if set; backend supports ?active=true/false
-            const params = { page, size: pageSize };
-            if (filterActive !== null) params.active = filterActive;
-            const res = await getMaterials(params);
-            setData(res?.content || []);
-            setTotal(res?.totalElements || 0);
+            setOdataError(false);
+
+            // Build $filter: isActive eq true and contains(description,'kw')
+            // queryMaterialsOData internally calls buildODataQuery() which handles statusFilter
+            // For Material we repurpose 'statusFilter' as the isActive flag string
+            const odataFilter = buildMaterialFilter(active, kw);
+
+            const { data: rows, total: count } = await queryMaterialsOData({
+                page, pageSize, sort,
+                // Pass raw $filter string — we need to extend odataApi slightly
+                customFilter: odataFilter,
+            });
+            setData(rows);
+            setTotal(count);
         } catch (err) {
-            console.error('Failed to fetch materials:', err);
-            message.error('Không thể tải danh sách Vật tư');
+            console.error('[OData] Failed to fetch materials:', err);
+            setData([]);
+            setTotal(0);
+            setOdataError(true);
+            message.error('Không thể tải dữ liệu Vật tư qua OData');
         } finally {
             setLoading(false);
         }
-    }, [page, pageSize, filterActive]);
+    };
 
-    useEffect(() => { fetchMaterials(); }, [fetchMaterials]);
+    // Load on mount and when OData params change
+    useEffect(() => {
+        fetchMaterials({ page: pagination.current, pageSize: pagination.pageSize });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pagination.current, pagination.pageSize, sorter, activeFilter]);
 
     // ── Open form modal ───────────────────────────────────────────────────────
     const openFormModal = (record = null) => {
         setFormModal({ open: true, record });
         if (record) {
             form.setFieldsValue({
-                description: record.description,
-                materialType: record.materialType,
-                basePrice: record.basePrice,
-                unit: record.unit,
-                category: record.category,
-                manufacturer: record.manufacturer,
-                specifications: record.specifications,
-                imageUrl: record.imageUrl,
-                currency: record.currency || 'VND',
-                isActive: record.isActive, // Matches backend property
-                notes: record.notes,
+                description: record.description, materialType: record.materialType,
+                basePrice: record.basePrice, unit: record.unit, category: record.category,
+                manufacturer: record.manufacturer, specifications: record.specifications,
+                imageUrl: record.imageUrl, currency: record.currency || 'VND',
+                isActive: record.isActive, notes: record.notes,
             });
         } else {
             form.resetFields();
-            // Default to active when creating new
-            form.setFieldsValue({
-                isActive: true,
-                currency: 'VND'
-            });
+            form.setFieldsValue({ isActive: true, currency: 'VND' });
         }
     };
 
+    /** Handle Table pagination/sort change → triggers OData re-query */
+    const handleTableChange = (pag, _filters, sorterInfo) => {
+        setPagination({ current: pag.current, pageSize: pag.pageSize });
+        setSorter(sorterInfo?.column ? { field: sorterInfo.field, order: sorterInfo.order } : null);
+    };
+
+    const handleSearch = (value) => {
+        const kw = value?.trim() || '';
+        setKeyword(kw);
+        setPagination((prev) => ({ ...prev, current: 1 }));
+        fetchMaterials({ page: 1, pageSize: pagination.pageSize, kw });
+    };
+
+    const handleActiveChange = (val) => {
+        setActiveFilter(val !== undefined ? val : null);
+        setPagination((prev) => ({ ...prev, current: 1 }));
+    };
+
+    const handleRefresh = () => {
+        setKeyword('');
+        setActiveFilter(null);
+        setPagination({ current: 1, pageSize: pagination.pageSize });
+        fetchMaterials({ page: 1, pageSize: pagination.pageSize, active: null, kw: '' });
+    };
+
+    // ── CRUD handlers (REST API) ──────────────────────────────────────────────
     const handleFormSubmit = async () => {
         try {
             const values = await form.validateFields();
-
             setFormLoading(true);
             if (formModal.record) {
                 await updateMaterial(formModal.record.id, values);
@@ -101,39 +178,40 @@ export default function MaterialPage() {
                 message.success('Đã thêm Vật tư mới thành công!');
             }
             setFormModal({ open: false, record: null });
-            fetchMaterials();
+            fetchMaterials({ page: pagination.current, pageSize: pagination.pageSize });
         } catch (err) {
-            if (err?.errorFields) return; // AntD validation—do nothing
+            if (err?.errorFields) return;
             message.error(err?.response?.data?.message || 'Lỗi khi lưu Vật tư');
         } finally {
             setFormLoading(false);
         }
     };
 
-    // ── Delete (soft delete = toggle inactive via DELETE API) ────────────────
     const handleDelete = async (id) => {
         try {
             await deleteMaterial(id);
             message.success('Đã tắt hoạt động Vật tư!');
-            fetchMaterials();
+            fetchMaterials({ page: pagination.current, pageSize: pagination.pageSize });
         } catch (err) {
             message.error(err?.response?.data?.message || 'Lỗi khi xóa');
         }
     };
 
-    // ── Table columns ─────────────────────────────────────────────────────────
+    // ── Table columns (sorter=true → triggers $orderby via OData) ───────────
     const columns = [
         {
             title: 'Mã Vật tư',
             dataIndex: 'materialCode',
             key: 'materialCode',
             width: 140,
+            sorter: true, // OData: $orderby=materialCode asc/desc
             render: (v) => <Text strong style={{ fontFamily: 'monospace', color: '#1677ff' }}>{v}</Text>,
         },
         {
             title: 'Mô tả / Tên',
             dataIndex: 'description',
             key: 'description',
+            sorter: true, // OData: $orderby=description asc/desc
             ellipsis: true,
         },
         {
@@ -154,10 +232,13 @@ export default function MaterialPage() {
             dataIndex: 'basePrice',
             key: 'basePrice',
             align: 'right',
-            width: 150,
-            render: (v, record) => <Text type={v ? undefined : 'secondary'}>
-                {v != null ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: record.currency || 'VND' }).format(v) : '—'}
-            </Text>,
+            width: 160,
+            sorter: true, // OData: $orderby=basePrice desc → sort đắt nhất lên đầu!
+            render: (v, record) => (
+                <Text type={v ? undefined : 'secondary'}>
+                    {v != null ? formatCurrency(v, record.currency || 'VND') : '—'}
+                </Text>
+            ),
         },
         {
             title: 'ĐVT',
@@ -175,7 +256,7 @@ export default function MaterialPage() {
         },
         {
             title: 'Trạng thái',
-            dataIndex: 'isActive', // Backend response uses isActive
+            dataIndex: 'isActive',
             key: 'isActive',
             align: 'center',
             width: 110,
@@ -218,63 +299,99 @@ export default function MaterialPage() {
         },
     ];
 
-    // ── Stock Modal footer helper ─────────────────────────────────────────────
     const stockModalTitle = stockModal.record
         ? `Tồn kho: ${stockModal.record.materialCode} — ${stockModal.record.description}`
         : 'Thông tin Tồn kho';
 
+    // Build OData $filter string displayed in UI (live preview)
+    const liveFilterDisplay = (() => {
+        const parts = [];
+        if (activeFilter !== null) parts.push(`isActive eq ${activeFilter}`);
+        if (keyword) parts.push(`contains(description, '${keyword}')`);
+        return parts.join(' and ');
+    })();
+
     return (
         <div style={{ padding: '0 12px' }}>
 
-            {/* ── Page header ─────────────────────────────────────────────── */}
+            {/* ── Page Header ──────────────────────────────────────────────── */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-                <Title level={3} style={{ margin: 0 }}>
-                    <AppstoreOutlined style={{ marginRight: 8, color: '#1677ff' }} />
-                    Quản lý Vật tư
-                </Title>
+                <div>
+                    <Title level={3} style={{ margin: 0 }}>
+                        <AppstoreOutlined style={{ marginRight: 8, color: '#1677ff' }} />
+                        Quản lý Vật tư
+                    </Title>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                        <ThunderboltOutlined style={{ color: '#faad14', marginRight: 4 }} />
+                        Powered by <Text code style={{ fontSize: 11 }}>OData V4</Text>
+                        &nbsp;— Sort, Filter, Search phía Server
+                    </Text>
+                </div>
                 <Button type="primary" icon={<PlusOutlined />} onClick={() => openFormModal()}>
                     Thêm Vật tư
                 </Button>
             </div>
 
-            {/* ── Filter bar ──────────────────────────────────────────────── */}
-            <Card bordered={false} style={{ marginBottom: 16 }}>
-                <Row gutter={[12, 12]} align="middle">
-                    <Col>
-                        <Text type="secondary">Lọc trạng thái: </Text>
-                        <Select
-                            value={filterActive}
-                            onChange={(val) => { setFilterActive(val); setPage(0); }}
-                            style={{ width: 150, marginLeft: 8 }}
-                        >
-                            <Option value={null}>Tất cả</Option>
-                            <Option value={true}>Đang Active</Option>
-                            <Option value={false}>Đã Inactive</Option>
-                        </Select>
-                    </Col>
-                    <Col>
-                        <Button icon={<ReloadOutlined />} onClick={() => { setFilterActive(null); setPage(0); fetchMaterials(); }}>
-                            Làm mới
-                        </Button>
-                    </Col>
-                </Row>
-            </Card>
+            {/* ── OData Error Banner ───────────────────────────────────────── */}
+            {odataError && (
+                <Alert type="warning" showIcon
+                    message="OData V4 Endpoint không khả dụng"
+                    description="Endpoint: GET /odata/Materials — Vui lòng kiểm tra Backend."
+                    style={{ marginBottom: 16 }}
+                    action={<Button size="small" onClick={handleRefresh}>Thử lại</Button>}
+                />
+            )}
 
-            {/* ── Main table ──────────────────────────────────────────────── */}
             <Card bordered={false}>
+                {/* ── Filter & Search Bar ──────────────────────────────────── */}
+                <Space style={{ marginBottom: 16 }} wrap>
+                    {/* Keyword search → OData $filter=contains(description,'kw') */}
+                    <Input.Search
+                        placeholder="Tìm theo Tên hoặc Mã vật tư..."
+                        allowClear
+                        onSearch={handleSearch}
+                        style={{ width: 280 }}
+                    />
+
+                    {/* Active filter → OData $filter=isActive eq true/false */}
+                    <Select
+                        placeholder="Lọc theo trạng thái"
+                        allowClear
+                        style={{ width: 180 }}
+                        onChange={handleActiveChange}
+                        value={activeFilter}
+                    >
+                        <Option value={true}>✅ Đang Active</Option>
+                        <Option value={false}>⛔ Đã Inactive</Option>
+                    </Select>
+
+                    <Tooltip title="Làm mới">
+                        <Button icon={<ReloadOutlined />} onClick={handleRefresh} loading={loading} />
+                    </Tooltip>
+
+                    {/* Show live OData $filter being sent */}
+                    {liveFilterDisplay && (
+                        <Text type="secondary" style={{ fontSize: 11, fontFamily: 'monospace' }}>
+                            $filter={liveFilterDisplay}
+                        </Text>
+                    )}
+                </Space>
+
+                {/* ── Data Table ───────────────────────────────────────────── */}
                 <Table
                     columns={columns}
                     dataSource={data}
                     rowKey="id"
                     loading={loading}
+                    onChange={handleTableChange}
                     scroll={{ x: 'max-content' }}
                     pagination={{
-                        current: page + 1,
-                        pageSize,
-                        total,
+                        current: pagination.current,
+                        pageSize: pagination.pageSize,
+                        total: total,
                         showSizeChanger: true,
-                        showTotal: (t) => `Tổng: ${t} vật tư`,
-                        onChange: (p, ps) => { setPage(p - 1); setPageSize(ps); },
+                        pageSizeOptions: ['5', '10', '20', '50'],
+                        showTotal: (t, range) => `${range[0]}–${range[1]} / ${t} vật tư`,
                     }}
                     rowClassName={(record) => !record.isActive ? 'ant-table-row-disabled' : ''}
                 />

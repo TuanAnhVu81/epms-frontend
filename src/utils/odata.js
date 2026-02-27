@@ -24,7 +24,7 @@
  * @param {string|null} options.keyword      - free-text search keyword
  * @returns {string} URL query string e.g. "?$top=10&$skip=0&$count=true&$filter=..."
  */
-export function buildODataQuery({ page = 1, pageSize = 10, sort = null, statusFilter = null, keyword = '' } = {}) {
+export function buildODataQuery({ page = 1, pageSize = 10, sort = null, statusFilter = null, keyword = '', customFilter = null } = {}) {
     const params = new URLSearchParams();
 
     // ── Pagination ────────────────────────────────────────────────────────────
@@ -43,23 +43,28 @@ export function buildODataQuery({ page = 1, pageSize = 10, sort = null, statusFi
     }
 
     // ── Filtering ($filter) ───────────────────────────────────────────────────
-    const filterClauses = [];
+    // customFilter overrides the built-in filter builder (used by MaterialPage)
+    if (customFilter) {
+        params.set('$filter', customFilter);
+    } else {
+        const filterClauses = [];
 
-    // Status filter: e.g. status eq 'APPROVED'
-    if (statusFilter) {
-        filterClauses.push(`status eq '${statusFilter}'`);
-    }
+        // Status filter: e.g. status eq 'APPROVED'
+        if (statusFilter) {
+            filterClauses.push(`status eq '${statusFilter}'`);
+        }
 
-    // Keyword search: use OData 'contains' function on poNumber and vendorName
-    // Syntax: contains(field, 'keyword')
-    if (keyword && keyword.trim()) {
-        const kw = keyword.trim().replace(/'/g, "''"); // Escape single quotes (SQL-injection safe)
-        filterClauses.push(`(contains(poNumber, '${kw}') or contains(vendorName, '${kw}'))`);
-    }
+        // Keyword search: use OData 'contains' function on poNumber and vendorName
+        // Syntax: contains(field, 'keyword')
+        if (keyword && keyword.trim()) {
+            const kw = keyword.trim().replace(/'/g, "''"); // Escape single quotes (SQL-injection safe)
+            filterClauses.push(`(contains(poNumber, '${kw}') or contains(vendorName, '${kw}'))`);
+        }
 
-    // Join multiple filter clauses with 'and'
-    if (filterClauses.length > 0) {
-        params.set('$filter', filterClauses.join(' and '));
+        // Join multiple filter clauses with 'and'
+        if (filterClauses.length > 0) {
+            params.set('$filter', filterClauses.join(' and '));
+        }
     }
 
     return `?${params.toString()}`;
