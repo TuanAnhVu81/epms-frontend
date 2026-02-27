@@ -65,9 +65,9 @@ export default function DashboardPage() {
     // 1. Calculate metrics for 4 KPI Cards
     const totalOrders = statusSummary.reduce((sum, item) => sum + (item.count || 0), 0);
 
-    // Total value only for APPROVED POs
+    // Total value for both APPROVED and RECEIVED POs (Committed Budget)
     const approvedValue = statusSummary
-        .filter((s) => s.status === 'APPROVED')
+        .filter((s) => s.status === 'APPROVED' || s.status === 'RECEIVED')
         .reduce((sum, item) => sum + (item.totalAmount || 0), 0);
 
     const pendingCount = statusSummary.find((s) => s.status === 'PENDING')?.count || 0;
@@ -77,8 +77,11 @@ export default function DashboardPage() {
         ? monthlyTrend.reduce((sum, item) => sum + (item.approvalRate || 0), 0) / monthlyTrend.length
         : 0;
 
+    // Extract base currency from the first available status group (Backend returns data normalized)
+    const baseCurrency = statusSummary.find((s) => s.currency)?.currency || 'VND';
+
     // Helper functions
-    const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
+    const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: baseCurrency }).format(val || 0);
     const formatCompact = (val) => new Intl.NumberFormat('vi-VN', { notation: "compact" }).format(val || 0);
 
     // Dùng mã màu hex riêng biệt cho từng trạng thái trên biểu đồ
@@ -242,7 +245,7 @@ export default function DashboardPage() {
                                         tickFormatter={formatCompact}
                                         axisLine={false}
                                         tickLine={false}
-                                        label={{ value: 'Giá trị mua (VND)', angle: -90, position: 'insideLeft', style: { fill: '#666' } }}
+                                        label={{ value: `Giá trị mua (${baseCurrency})`, angle: -90, position: 'insideLeft', style: { fill: '#666' } }}
                                     />
                                     <YAxis
                                         yAxisId="right"
@@ -254,7 +257,7 @@ export default function DashboardPage() {
 
                                     <Tooltip
                                         formatter={(value, name) => [
-                                            name === 'Giá trị mua (VND)' ? formatCurrency(value) : value,
+                                            name === `Giá trị mua (${baseCurrency})` ? formatCurrency(value) : value,
                                             name
                                         ]}
                                     />
@@ -264,7 +267,7 @@ export default function DashboardPage() {
                                         yAxisId="left"
                                         type="monotone"
                                         dataKey="amount"
-                                        name="Giá trị mua (VND)"
+                                        name={`Giá trị mua (${baseCurrency})`}
                                         stroke="#52c41a"
                                         strokeWidth={3}
                                         activeDot={{ r: 8 }}
