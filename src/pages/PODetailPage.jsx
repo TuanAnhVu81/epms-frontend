@@ -251,6 +251,23 @@ export default function PODetailPage() {
                 <Text strong style={{ color: '#1677ff' }}>{formatCurrency(v, po.currency)}</Text>
             ),
         },
+        {
+            // Show per-item notes if present; dash when empty
+            title: 'Ghi chú dòng',
+            dataIndex: 'notes',
+            key: 'notes',
+            width: 180,
+            render: (v) =>
+                v ? (
+                    <Tooltip title={v}>
+                        <Text type="secondary" style={{ fontSize: 12 }} ellipsis>
+                            {v}
+                        </Text>
+                    </Tooltip>
+                ) : (
+                    <Text type="secondary" style={{ fontSize: 11 }}>—</Text>
+                ),
+        },
     ];
 
     return (
@@ -423,6 +440,8 @@ export default function PODetailPage() {
                                                 {formatCurrency(po.grandTotal, po.currency)}
                                             </Text>
                                         </Table.Summary.Cell>
+                                        {/* Empty cell for the Ghi chú dòng column */}
+                                        <Table.Summary.Cell index={5} />
                                     </Table.Summary.Row>
                                 </Table.Summary>
                             )}

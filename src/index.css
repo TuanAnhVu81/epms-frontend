@@ -21,13 +21,27 @@ body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: #f0f0f0;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #bfbfbf;
   border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #8c8c8c;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Ant Design Select — hide the blinking text cursor in search input.
+   Reason: After selecting a value, the input field remains editable which
+   looks confusing (user thinks they can overwrite the selection).
+   Setting caret-color: transparent hides the cursor visually while still
+   allowing keyboard filtering to work normally inside the dropdown.
+   ───────────────────────────────────────────────────────────────────────── */
+.ant-select-selection-search-input {
+  caret-color: transparent !important;
 }

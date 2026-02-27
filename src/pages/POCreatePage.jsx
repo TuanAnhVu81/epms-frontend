@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Form, Select, DatePicker, Input, Button,
     Card, Row, Col, Typography, Divider, Space, message, Spin
@@ -26,6 +26,8 @@ export default function POCreatePage() {
     const [materials, setMaterials] = useState([]);
     const [grandTotal, setGrandTotal] = useState(0);
     const [currency, setCurrency] = useState('VND');
+    // Ref used to blur Select after selection — removes cursor completely
+    const vendorSelectRef = useRef(null);
 
     // Load vendors and materials for dropdowns
     useEffect(() => {
@@ -64,6 +66,8 @@ export default function POCreatePage() {
                     quantity: item.quantity,
                     unitPrice: item.unitPrice,
                     taxRate: (item.taxRate ?? 10) / 100,
+                    // Forward per-item note to backend PurchaseOrderItemRequest.notes
+                    notes: item.notes || null,
                 })),
             };
 
@@ -117,15 +121,21 @@ export default function POCreatePage() {
                                 rules={[{ required: true, message: 'Vui lòng chọn nhà cung cấp' }]}
                             >
                                 <Select
+                                    ref={vendorSelectRef}
                                     showSearch
                                     placeholder="Tìm và chọn nhà cung cấp..."
                                     optionFilterProp="label"
+                                    optionLabelProp="label"
+                                    // Blur after selection to remove cursor completely
+                                    onSelect={() => vendorSelectRef.current?.blur()}
                                 >
                                     {vendors.map((v) => (
-                                        <Option key={v.id} value={v.id} label={`${v.vendorCode} — ${v.vendorName}`}>
+                                        // label prop used for optionFilterProp="label" search
+                                        <Option key={v.id} value={v.id} label={`${v.name} (${v.vendorCode})`}>
                                             <Space direction="vertical" size={0}>
-                                                <Text strong>{v.vendorCode}</Text>
-                                                <Text type="secondary" style={{ fontSize: 12 }}>{v.vendorName}</Text>
+                                                {/* v.name matches VendorResponse.name from backend */}
+                                                <Text strong>{v.name}</Text>
+                                                <Text type="secondary" style={{ fontSize: 12 }}>{v.vendorCode}</Text>
                                             </Space>
                                         </Option>
                                     ))}

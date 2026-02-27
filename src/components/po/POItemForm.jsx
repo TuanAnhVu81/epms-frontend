@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
-    Form, Button, Select, InputNumber, Space, Divider,
+    Form, Button, Select, InputNumber, Input, Space, Divider,
     Typography, Card, Row, Col
 } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -21,6 +21,8 @@ const formatAmount = (val, currency = 'VND') =>
  */
 export default function POItemForm({ materials = [], poCurrency = 'VND', onTotalChange }) {
     const form = Form.useFormInstance();
+    // Store refs per row to blur Select after selection — removes cursor completely
+    const materialRefs = useRef({});
 
     // Calculate line total whenever a field in an item changes
     const recalculate = (changedIndex) => {
@@ -123,23 +125,29 @@ export default function POItemForm({ materials = [], poCurrency = 'VND', onTotal
                                             rules={[{ required: true, message: 'Vui lòng chọn vật tư' }]}
                                         >
                                             <Select
+                                                ref={(el) => { materialRefs.current[name] = el; }}
                                                 showSearch
                                                 placeholder="Tìm và chọn vật tư..."
                                                 optionFilterProp="label"
+                                                optionLabelProp="label"
                                                 onChange={(val) => handleMaterialSelect(val, name)}
                                                 style={{ width: '100%' }}
+                                                // Blur after selection to remove cursor completely
+                                                onSelect={() => materialRefs.current[name]?.blur()}
                                             >
                                                 {materials.map((m) => (
                                                     <Option
                                                         key={m.id}
                                                         value={m.id}
-                                                        label={`${m.materialCode} — ${m.description || m.materialDescription}`}
+                                                        // label used for optionFilterProp="label" search
+                                                        label={`${m.description || m.materialDescription} (${m.materialCode})`}
                                                     >
                                                         <div>
-                                                            <Text strong>{m.materialCode}</Text>
+                                                            {/* description (name) in bold — consistent with Vendor dropdown */}
+                                                            <Text strong>{m.description || m.materialDescription}</Text>
                                                             <br />
                                                             <Text type="secondary" style={{ fontSize: 12 }}>
-                                                                {m.description || m.materialDescription} - ĐVT: {m.unit || m.unitOfMeasure}
+                                                                {m.materialCode} — ĐVT: {m.unit || m.unitOfMeasure}
                                                             </Text>
                                                         </div>
                                                     </Option>
@@ -227,6 +235,23 @@ export default function POItemForm({ materials = [], poCurrency = 'VND', onTotal
                                                 suffix="%"
                                                 placeholder="10"
                                                 onChange={() => recalculate(name)}
+                                            />
+                                        </Form.Item>
+                                    </Col>
+                                </Row>
+
+                                {/* Row 2: Notes per line item */}
+                                <Row gutter={[12, 0]}>
+                                    <Col xs={24}>
+                                        <Form.Item
+                                            {...restField}
+                                            name={[name, 'notes']}
+                                            label="Ghi chú dòng hàng"
+                                        >
+                                            <Input
+                                                placeholder="VD: Yêu cầu đặc biệt, mã màu, phiên bản... (tùy chọn)"
+                                                maxLength={500}
+                                                showCount
                                             />
                                         </Form.Item>
                                     </Col>
