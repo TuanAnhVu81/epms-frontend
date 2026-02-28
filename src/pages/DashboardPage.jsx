@@ -43,7 +43,7 @@ export default function DashboardPage() {
                 }
             } catch (err) {
                 console.error('Failed to fetch dashboard data:', err);
-                setError('Không thể tải dữ liệu Dashboard. Vui lòng kiểm tra kết nối với server.');
+                setError('Failed to fetch Dashboard data. Please check server connection.');
             } finally {
                 setLoading(false);
             }
@@ -55,7 +55,7 @@ export default function DashboardPage() {
     if (error) {
         return (
             <div style={{ padding: 24 }}>
-                <Alert message="Lỗi tải giao diện Dashboard" description={error} type="error" showIcon />
+                <Alert message="Error loading Dashboard" description={error} type="error" showIcon />
             </div>
         );
     }
@@ -84,15 +84,15 @@ export default function DashboardPage() {
     const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: baseCurrency }).format(val || 0);
     const formatCompact = (val) => new Intl.NumberFormat('vi-VN', { notation: "compact" }).format(val || 0);
 
-    // Dùng mã màu hex riêng biệt cho từng trạng thái trên biểu đồ
+    // Use distinct hex colors for each status on the chart
     const getStatusColor = (status) => {
         switch (status) {
-            case 'APPROVED': return '#52c41a';    // Xanh lá (rõ)
-            case 'PENDING': return '#faad14';     // Vàng cam
-            case 'REJECTED': return '#ff4d4f';    // Đỏ
-            case 'CREATED': return '#1677ff';     // Xanh dương (Thay vì xám để dễ phân biệt với hủy)
-            case 'CANCELLED': return '#bfbfbf';   // Xám
-            default: return '#d9d9d9';            // Dự phòng
+            case 'APPROVED': return '#52c41a';    // Emerald
+            case 'PENDING': return '#faad14';     // Orange
+            case 'REJECTED': return '#ff4d4f';    // Red
+            case 'CREATED': return '#1677ff';     // Blue (Vs Gray to distinguish from cancelled)
+            case 'CANCELLED': return '#bfbfbf';   // Gray
+            default: return '#d9d9d9';            // Fallback
         }
     };
 
@@ -118,19 +118,19 @@ export default function DashboardPage() {
 
     // Chart tooltip formatters
     const renderTooltipValue = (value) => {
-        return [formatCurrency(value), 'Giá trị'];
+        return [formatCurrency(value), 'Value'];
     };
 
     return (
         <div style={{ padding: '0 12px' }}>
-            <Title level={3} style={{ marginBottom: 24 }}>Dashboard Quản Trị (Analytics)</Title>
+            <Title level={3} style={{ marginBottom: 24 }}>Admin Dashboard (Analytics)</Title>
 
             {/* Row 1: 4 KPI Cards */}
             <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
                 <Col xs={24} sm={12} lg={6}>
                     <Card bordered={false} hoverable loading={loading}>
                         <Statistic
-                            title="Tổng số P.O đã tạo"
+                            title="Total POs Created"
                             value={totalOrders}
                             prefix={<ShoppingCartOutlined />}
                             valueStyle={{ color: '#1677ff' }}
@@ -140,7 +140,7 @@ export default function DashboardPage() {
                 <Col xs={24} sm={12} lg={6}>
                     <Card bordered={false} hoverable loading={loading}>
                         <Statistic
-                            title="Tổng giá trị P.O (Đã duyệt)"
+                            title="Total PO Value (approved)"
                             value={approvedValue}
                             precision={0}
                             prefix={<DollarOutlined />}
@@ -152,7 +152,7 @@ export default function DashboardPage() {
                 <Col xs={24} sm={12} lg={6}>
                     <Card bordered={false} hoverable loading={loading}>
                         <Statistic
-                            title="Tỉ lệ duyệt trung bình (Monthly)"
+                            title="Average Approval Rate (Monthly)"
                             value={avgApprovalRate}
                             precision={1}
                             suffix="%"
@@ -164,7 +164,7 @@ export default function DashboardPage() {
                 <Col xs={24} sm={12} lg={6}>
                     <Card bordered={false} hoverable loading={loading}>
                         <Statistic
-                            title="Đơn đang chờ duyệt (PENDING)"
+                            title="Pending POs (PENDING)"
                             value={pendingCount}
                             prefix={<ClockCircleOutlined />}
                             valueStyle={{ color: '#faad14' }}
@@ -176,7 +176,7 @@ export default function DashboardPage() {
             <Row gutter={[16, 16]}>
                 {/* Row 2 - Left: PO Status Donut Chart */}
                 <Col xs={24} lg={8}>
-                    <Card title="Phân bổ trạng thái P.O (Số lượng)" bordered={false} hoverable loading={loading} style={{ height: '100%' }}>
+                    <Card title="PO Status Distribution" bordered={false} hoverable loading={loading} style={{ height: '100%' }}>
                         {statusSummary.length > 0 && totalOrders > 0 ? (
                             <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>
@@ -199,7 +199,7 @@ export default function DashboardPage() {
                             </ResponsiveContainer>
                         ) : (
                             <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Empty description="Không có dữ liệu P.O" />
+                                <Empty description="No data P.O" />
                             </div>
                         )}
                     </Card>
@@ -207,7 +207,7 @@ export default function DashboardPage() {
 
                 {/* Row 2 - Right: Top Vendors Bar Chart */}
                 <Col xs={24} lg={16}>
-                    <Card title="Top Nhà cung cấp (Giá trị Mua)" bordered={false} hoverable loading={loading} style={{ height: '100%' }}>
+                    <Card title="Top Vendor (Value Mua)" bordered={false} hoverable loading={loading} style={{ height: '100%' }}>
                         {topVendors.length > 0 ? (
                             <ResponsiveContainer width="100%" height={300}>
                                 <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -220,12 +220,12 @@ export default function DashboardPage() {
                                     />
                                     <Tooltip formatter={renderTooltipValue} cursor={{ fill: 'rgba(0,0,0,0.05)' }} />
                                     <Legend />
-                                    <Bar dataKey="value" name="Giá trị ($)" fill="#1677ff" radius={[6, 6, 0, 0]} maxBarSize={60} />
+                                    <Bar dataKey="value" name="Value ($)" fill="#1677ff" radius={[6, 6, 0, 0]} maxBarSize={60} />
                                 </BarChart>
                             </ResponsiveContainer>
                         ) : (
                             <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Empty description="Không có dữ liệu NCC" />
+                                <Empty description="No data NCC" />
                             </div>
                         )}
                     </Card>
@@ -233,7 +233,7 @@ export default function DashboardPage() {
 
                 {/* Row 3: Daily Trend Line Chart */}
                 <Col xs={24}>
-                    <Card title="Xu hướng Mua hàng theo thời gian (14 ngày gần nhất)" bordered={false} hoverable loading={loading} style={{ marginTop: 16 }}>
+                    <Card title="Purchasing Trend (Last 14 Days)" bordered={false} hoverable loading={loading} style={{ marginTop: 16 }}>
                         {monthlyTrend.length > 0 ? (
                             <ResponsiveContainer width="100%" height={350}>
                                 <LineChart data={lineData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -245,19 +245,19 @@ export default function DashboardPage() {
                                         tickFormatter={formatCompact}
                                         axisLine={false}
                                         tickLine={false}
-                                        label={{ value: `Giá trị mua (${baseCurrency})`, angle: -90, position: 'insideLeft', style: { fill: '#666' } }}
+                                        label={{ value: `Value mua (${baseCurrency})`, angle: -90, position: 'insideLeft', style: { fill: '#666' } }}
                                     />
                                     <YAxis
                                         yAxisId="right"
                                         orientation="right"
                                         axisLine={false}
                                         tickLine={false}
-                                        label={{ value: 'Số lượng PO', angle: 90, position: 'insideRight', style: { fill: '#666' } }}
+                                        label={{ value: 'Quantity PO', angle: 90, position: 'insideRight', style: { fill: '#666' } }}
                                     />
 
                                     <Tooltip
                                         formatter={(value, name) => [
-                                            name === `Giá trị mua (${baseCurrency})` ? formatCurrency(value) : value,
+                                            name === `Value mua (${baseCurrency})` ? formatCurrency(value) : value,
                                             name
                                         ]}
                                     />
@@ -267,7 +267,7 @@ export default function DashboardPage() {
                                         yAxisId="left"
                                         type="monotone"
                                         dataKey="amount"
-                                        name={`Giá trị mua (${baseCurrency})`}
+                                        name={`Value mua (${baseCurrency})`}
                                         stroke="#52c41a"
                                         strokeWidth={3}
                                         activeDot={{ r: 8 }}
@@ -277,7 +277,7 @@ export default function DashboardPage() {
                                         yAxisId="right"
                                         type="monotone"
                                         dataKey="count"
-                                        name="Số lượng PO"
+                                        name="Quantity PO"
                                         stroke="#faad14"
                                         strokeWidth={3}
                                         dot={{ r: 4 }}
@@ -286,7 +286,7 @@ export default function DashboardPage() {
                             </ResponsiveContainer>
                         ) : (
                             <div style={{ height: 350, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Empty description="Không có dữ liệu mua hàng" />
+                                <Empty description="No purchase data" />
                             </div>
                         )}
                     </Card>

@@ -67,13 +67,13 @@ export default function PurchaseOrderPage() {
 
             setData(rows);
             setTotal(count);
-        } catch (err) {
-            console.error('[OData] Failed to fetch POs:', err);
+        } catch (error) {
+            console.error('[OData] Failed to fetch POs:', error);
             // Clear stale data so user doesn't see old results after a failed filtered request
             setData([]);
             setTotal(0);
-            setOdataError(true);
-            message.error('Không thể tải dữ liệu qua OData V4. Vui lòng kiểm tra kết nối backend.');
+            console.error('Fetch POs via OData error:', error);
+            message.error(error?.response?.data?.message || 'Failed to fetch data via OData V4. Please check backend connection.');
         } finally {
             setLoading(false);
         }
@@ -120,27 +120,27 @@ export default function PurchaseOrderPage() {
     const handleDelete = async (id) => {
         try {
             await deletePurchaseOrder(id);
-            message.success('Đã hủy Đơn mua hàng!');
+            message.success('Purchase Order cancelled successfully!');
             fetchPOs({ page: pagination.current, pageSize: pagination.pageSize });
         } catch {
-            message.error('Lỗi khi hủy Đơn mua hàng');
+            message.error('Failed to cancel Purchase Order');
         }
     };
 
     const handleSubmit = async (id) => {
         try {
             await submitPurchaseOrder(id);
-            message.success('Đã trình duyệt Đơn mua hàng thành công!');
+            message.success('PO submitted for approval successfully!');
             fetchPOs({ page: pagination.current, pageSize: pagination.pageSize });
         } catch {
-            message.error('Lỗi khi submit Đơn mua hàng');
+            message.error('Failed to submit Purchase Order');
         }
     };
 
     // ── Table columns ─────────────────────────────────────────────────────────
     const columns = [
         {
-            title: 'Mã PO',
+            title: 'PO Number',
             dataIndex: 'poNumber',
             key: 'poNumber',
             sorter: true, // Enable server-side $orderby via OData
@@ -151,14 +151,14 @@ export default function PurchaseOrderPage() {
             ),
         },
         {
-            title: 'Nhà cung cấp',
+            title: 'Vendor',
             dataIndex: 'vendorName',
             key: 'vendorName',
             sorter: true,
             ellipsis: true,
         },
         {
-            title: 'Ngày đặt hàng',
+            title: 'Order Date',
             dataIndex: 'orderDate',
             key: 'orderDate',
             sorter: true, // OData: $orderby=orderDate asc/desc
@@ -166,7 +166,7 @@ export default function PurchaseOrderPage() {
             render: (val) => val ? dayjs(val).format('DD/MM/YYYY') : '—',
         },
         {
-            title: 'Trạng thái',
+            title: 'Status',
             dataIndex: 'status',
             key: 'status',
             width: 160,
@@ -180,7 +180,7 @@ export default function PurchaseOrderPage() {
             },
         },
         {
-            title: 'Tổng tiền',
+            title: 'Total Amount',
             dataIndex: 'grandTotal',
             key: 'grandTotal',
             align: 'right',
@@ -193,7 +193,7 @@ export default function PurchaseOrderPage() {
                 }).format(val || 0),
         },
         {
-            title: 'SL Mục',
+            title: 'Item Count',
             dataIndex: 'itemCount',
             key: 'itemCount',
             align: 'center',
@@ -203,7 +203,7 @@ export default function PurchaseOrderPage() {
             ),
         },
         {
-            title: 'Thao tác',
+            title: 'Actions',
             key: 'action',
             align: 'center',
             width: 140,
@@ -212,7 +212,7 @@ export default function PurchaseOrderPage() {
 
                 return (
                     <Space size="small">
-                        <Tooltip title="Xem chi tiết">
+                        <Tooltip title="View Details">
                             <Button
                                 type="text"
                                 size="small"
@@ -223,7 +223,7 @@ export default function PurchaseOrderPage() {
 
                         {canEditDelete && (
                             <>
-                                <Tooltip title="Chỉnh sửa">
+                                <Tooltip title="Edit">
                                     <Button
                                         type="text"
                                         size="small"
@@ -233,13 +233,13 @@ export default function PurchaseOrderPage() {
                                 </Tooltip>
 
                                 <Popconfirm
-                                    title="Trình duyệt PO?"
-                                    description="Sau khi trình duyệt, đơn hàng không thể chỉnh sửa."
+                                    title="Submit PO for approval?"
+                                    description="Once submitted, the PO cannot be modified."
                                     onConfirm={() => handleSubmit(record.id)}
-                                    okText="Trình duyệt"
-                                    cancelText="Hủy"
+                                    okText="Submit"
+                                    cancelText="Cancel"
                                 >
-                                    <Tooltip title="Trình duyệt">
+                                    <Tooltip title="Submit for Approval">
                                         <Button
                                             type="text"
                                             size="small"
@@ -249,14 +249,14 @@ export default function PurchaseOrderPage() {
                                 </Popconfirm>
 
                                 <Popconfirm
-                                    title="Hủy đơn hàng?"
-                                    description="Hành động này không thể hoàn tác."
+                                    title="Cancel PO?"
+                                    description="This action cannot be undone."
                                     onConfirm={() => handleDelete(record.id)}
-                                    okText="Xóa"
-                                    cancelText="Hủy"
+                                    okText="Delete"
+                                    cancelText="Cancel"
                                     okButtonProps={{ danger: true }}
                                 >
-                                    <Tooltip title="Hủy đơn">
+                                    <Tooltip title="Cancel PO">
                                         <Button type="text" size="small" danger icon={<DeleteOutlined />} />
                                     </Tooltip>
                                 </Popconfirm>
@@ -274,17 +274,17 @@ export default function PurchaseOrderPage() {
             {/* ── Page Header ──────────────────────────────────────────────── */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                 <div>
-                    <Title level={3} style={{ margin: 0 }}>Quản lý Đơn mua hàng</Title>
+                    <Title level={3} style={{ margin: 0 }}>Purchase Order Management</Title>
                     {/* OData badge — great talking point in CV interviews! */}
                     <Text type="secondary" style={{ fontSize: 12 }}>
                         <ThunderboltOutlined style={{ color: '#faad14', marginRight: 4 }} />
                         Powered by&nbsp;
                         <Text code style={{ fontSize: 11 }}>OData V4</Text>
-                        &nbsp;— Hỗ trợ tìm kiếm, lọc, sắp xếp phía Server
+                        &nbsp;— Server-side search, filter, and sort supported
                     </Text>
                 </div>
                 <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/my-orders/create')}>
-                    Tạo P.O mới
+                    Create New P.O
                 </Button>
             </div>
 
@@ -293,11 +293,11 @@ export default function PurchaseOrderPage() {
                 <Alert
                     type="warning"
                     showIcon
-                    message="OData V4 Endpoint không khả dụng"
-                    description="Backend OData service có thể chưa được khởi động. Endpoint: GET /odata/PurchaseOrders"
+                    message="OData V4 Endpoint unavailable"
+                    description="Backend OData service may not be running. Endpoint: GET /odata/PurchaseOrders"
                     style={{ marginBottom: 16 }}
                     action={
-                        <Button size="small" onClick={handleRefresh}>Thử lại</Button>
+                        <Button size="small" onClick={handleRefresh}>Retry</Button>
                     }
                 />
             )}
@@ -307,7 +307,7 @@ export default function PurchaseOrderPage() {
                 <Space style={{ marginBottom: 16 }} wrap>
                     {/* Keyword search → OData $filter=contains(...) */}
                     <Input.Search
-                        placeholder="Tìm mã PO hoặc Nhà cung cấp..."
+                        placeholder="Search PO Number or Vendor..."
                         allowClear
                         onSearch={handleSearch}
                         style={{ width: 300 }}
@@ -316,7 +316,7 @@ export default function PurchaseOrderPage() {
 
                     {/* Status filter → OData $filter=status eq '...' */}
                     <Select
-                        placeholder="Lọc theo trạng thái"
+                        placeholder="Filter by status"
                         allowClear
                         style={{ width: 210 }}
                         onChange={handleStatusChange}
@@ -329,7 +329,7 @@ export default function PurchaseOrderPage() {
                     </Select>
 
                     {/* Refresh button */}
-                    <Tooltip title="Làm mới dữ liệu">
+                    <Tooltip title="Refresh data">
                         <Button icon={<ReloadOutlined />} onClick={handleRefresh} loading={loading} />
                     </Tooltip>
 
@@ -359,7 +359,7 @@ export default function PurchaseOrderPage() {
                         showSizeChanger: true,
                         pageSizeOptions: ['5', '10', '20', '50'],
                         showTotal: (t, range) =>
-                            `${range[0]}–${range[1]} / ${t} đơn hàng`,
+                            `${range[0]}–${range[1]} / ${t} orders`,
                     }}
                 />
             </Card>
@@ -369,5 +369,5 @@ export default function PurchaseOrderPage() {
 
 // Tiny icon component for Search button label
 function SearchButton() {
-    return <span>Tìm</span>;
+    return <span>Search</span>;
 }

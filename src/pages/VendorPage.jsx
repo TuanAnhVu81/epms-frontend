@@ -86,7 +86,7 @@ export default function VendorPage() {
             setData([]);
             setTotal(0);
             setOdataError(true);
-            message.error('Không thể tải dữ liệu Nhà cung cấp qua OData');
+            message.error('Failed to fetch data Vendor qua OData');
         } finally {
             setLoading(false);
         }
@@ -143,16 +143,16 @@ export default function VendorPage() {
             setFormLoading(true);
             if (formModal.record) {
                 await updateVendor(formModal.record.id, values);
-                message.success('Đã cập nhật Nhà cung cấp thành công!');
+                message.success('Vendor updated successfully!');
             } else {
                 await createVendor(values);
-                message.success('Đã thêm Nhà cung cấp mới thành công!');
+                message.success('New Vendor added successfully!');
             }
             setFormModal({ open: false, record: null });
             fetchVendors({ page: pagination.current, pageSize: pagination.pageSize });
         } catch (err) {
             if (err?.errorFields) return;
-            message.error(err?.response?.data?.message || 'Lỗi khi lưu Nhà cung cấp');
+            message.error(err?.response?.data?.message || 'Error saving Vendor');
         } finally {
             setFormLoading(false);
         }
@@ -161,10 +161,10 @@ export default function VendorPage() {
     const handleDelete = async (id) => {
         try {
             await deleteVendor(id);
-            message.success('Đã xóa Nhà cung cấp!');
+            message.success('Vendor deleted!');
             fetchVendors({ page: pagination.current, pageSize: pagination.pageSize });
         } catch (err) {
-            message.error(err?.response?.data?.message || 'Lỗi khi xóa');
+            message.error(err?.response?.data?.message || 'Error deleting');
         }
     };
 
@@ -178,12 +178,12 @@ export default function VendorPage() {
             const values = await ratingForm.validateFields();
             setRatingLoading(true);
             await updateVendorRating(ratingModal.record.id, values);
-            message.success('Đã cập nhật Rating!');
+            message.success('Rating updated!');
             setRatingModal({ open: false, record: null });
             fetchVendors({ page: pagination.current, pageSize: pagination.pageSize });
         } catch (err) {
             if (err?.errorFields) return;
-            message.error(err?.response?.data?.message || 'Lỗi khi cập nhật rating');
+            message.error(err?.response?.data?.message || 'Error updating rating');
         } finally {
             setRatingLoading(false);
         }
@@ -192,7 +192,7 @@ export default function VendorPage() {
     // ── Table columns (sorter=true → triggers $orderby via OData) ───────────
     const columns = [
         {
-            title: 'Mã NCC',
+            title: 'Vendor Code',
             dataIndex: 'vendorCode',
             key: 'vendorCode',
             width: 140,
@@ -200,14 +200,14 @@ export default function VendorPage() {
             render: (v) => <Text strong style={{ fontFamily: 'monospace', color: '#1677ff' }}>{v}</Text>,
         },
         {
-            title: 'Tên Nhà cung cấp',
+            title: 'Vendor Name',
             dataIndex: 'name',
             key: 'name',
             sorter: true, // OData: $orderby=name asc/desc
             ellipsis: true,
         },
         {
-            title: 'Phân loại',
+            title: 'Category',
             dataIndex: 'category',
             key: 'category',
             width: 150,
@@ -223,7 +223,7 @@ export default function VendorPage() {
             ellipsis: true,
         },
         {
-            title: 'SĐT',
+            title: 'Phone',
             dataIndex: 'phone',
             key: 'phone',
             width: 130,
@@ -234,7 +234,7 @@ export default function VendorPage() {
             key: 'rating',
             width: 140,
             align: 'center',
-            sorter: true, // OData: $orderby=rating desc → sort tốt nhất lên đầu!
+            sorter: true, // OData: $orderby=rating desc → sort best first!
             render: (v) => (
                 <Tooltip title={`${v ?? '—'} / 5`}>
                     <Rate disabled value={v ?? 0} style={{ fontSize: 13 }} />
@@ -242,7 +242,7 @@ export default function VendorPage() {
             ),
         },
         {
-            title: 'Trạng thái',
+            title: 'Status',
             dataIndex: 'status',
             key: 'status',
             width: 110,
@@ -250,26 +250,26 @@ export default function VendorPage() {
             render: (v) => <ActiveBadge status={v} />,
         },
         {
-            title: 'Thao tác',
+            title: 'Actions',
             key: 'actions',
             width: 120,
             align: 'center',
             fixed: 'right',
             render: (_, record) => (
                 <Space size="small">
-                    <Tooltip title="Chỉnh sửa">
+                    <Tooltip title="Edit">
                         <Button size="small" icon={<EditOutlined />} onClick={() => openFormModal(record)} />
                     </Tooltip>
-                    <Tooltip title="Cập nhật Rating">
+                    <Tooltip title="Update Rating">
                         <Button size="small" icon={<StarOutlined />} onClick={() => openRatingModal(record)} />
                     </Tooltip>
                     <Popconfirm
-                        title="Xóa Nhà cung cấp?"
-                        description="Hành động này không thể hoàn tác."
+                        title="Delete Vendor?"
+                        description="This action cannot be undone."
                         onConfirm={() => handleDelete(record.id)}
-                        okText="Xóa" cancelText="Hủy" okButtonProps={{ danger: true }}
+                        okText="Delete" cancelText="Cancel" okButtonProps={{ danger: true }}
                     >
-                        <Tooltip title="Xóa">
+                        <Tooltip title="Delete">
                             <Button size="small" danger icon={<DeleteOutlined />} />
                         </Tooltip>
                     </Popconfirm>
@@ -286,26 +286,26 @@ export default function VendorPage() {
                 <div>
                     <Title level={3} style={{ margin: 0 }}>
                         <ShopOutlined style={{ marginRight: 8, color: '#1677ff' }} />
-                        Quản lý Nhà cung cấp
+                        Vendor Management
                     </Title>
                     <Text type="secondary" style={{ fontSize: 12 }}>
                         <ThunderboltOutlined style={{ color: '#faad14', marginRight: 4 }} />
                         Powered by <Text code style={{ fontSize: 11 }}>OData V4</Text>
-                        &nbsp;— Sort, Filter, Search phía Server
+                        &nbsp;— Sort, Filter, Search Server-side
                     </Text>
                 </div>
                 <Button type="primary" icon={<PlusOutlined />} onClick={() => openFormModal()}>
-                    Thêm Nhà cung cấp
+                    Add Vendor
                 </Button>
             </div>
 
             {/* ── OData Error Banner ───────────────────────────────────────── */}
             {odataError && (
                 <Alert type="warning" showIcon
-                    message="OData V4 Endpoint không khả dụng"
-                    description="Endpoint: GET /odata/Vendors — Vui lòng kiểm tra Backend."
+                    message="OData V4 Endpoint unavailable"
+                    description="Endpoint: GET /odata/Vendors — Please check backend."
                     style={{ marginBottom: 16 }}
-                    action={<Button size="small" onClick={handleRefresh}>Thử lại</Button>}
+                    action={<Button size="small" onClick={handleRefresh}>Retry</Button>}
                 />
             )}
 
@@ -314,7 +314,7 @@ export default function VendorPage() {
                 <Space style={{ marginBottom: 16 }} wrap>
                     {/* Keyword search → OData $filter=contains(name,'kw') or contains(vendorCode,'kw') */}
                     <Input.Search
-                        placeholder="Tìm theo Tên hoặc Mã NCC..."
+                        placeholder="Search by Name or Vendor Code..."
                         allowClear
                         onSearch={handleSearch}
                         style={{ width: 280 }}
@@ -322,7 +322,7 @@ export default function VendorPage() {
 
                     {/* Status filter → OData $filter=status eq 'ACTIVE' */}
                     <Select
-                        placeholder="Lọc theo trạng thái"
+                        placeholder="Filter by status"
                         allowClear
                         style={{ width: 180 }}
                         onChange={handleStatusChange}
@@ -331,7 +331,7 @@ export default function VendorPage() {
                         <Option value="INACTIVE">⛔ Inactive</Option>
                     </Select>
 
-                    <Tooltip title="Làm mới">
+                    <Tooltip title="Refresh">
                         <Button icon={<ReloadOutlined />} onClick={handleRefresh} loading={loading} />
                     </Tooltip>
 
@@ -367,12 +367,12 @@ export default function VendorPage() {
 
             {/* ── Create / Edit Modal ──────────────────────────────────────── */}
             <Modal
-                title={formModal.record ? '✏️ Chỉnh sửa Nhà cung cấp' : '➕ Thêm Nhà cung cấp mới'}
+                title={formModal.record ? '✏️ Edit Vendor' : '➕ Add New Vendor'}
                 open={formModal.open}
                 onCancel={() => { setFormModal({ open: false, record: null }); form.resetFields(); }}
                 onOk={handleFormSubmit}
-                okText={formModal.record ? 'Lưu thay đổi' : 'Tạo mới'}
-                cancelText="Hủy"
+                okText={formModal.record ? 'Save Changes' : 'Create'}
+                cancelText="Cancel"
                 confirmLoading={formLoading}
                 width={720} centered destroyOnClose
                 bodyStyle={{ maxHeight: '70vh', overflowY: 'auto', paddingRight: '8px' }}
@@ -381,13 +381,13 @@ export default function VendorPage() {
                 <Form form={form} layout="vertical" scrollToFirstError>
                     <Row gutter={[16, 0]}>
                         <Col xs={24} md={12}>
-                            <Form.Item name="name" label="Tên Nhà cung cấp" rules={[{ required: true, message: 'Vui lòng nhập tên NCC' }]}>
-                                <Input placeholder="Tên công ty / cửa hàng..." />
+                            <Form.Item name="name" label="Vendor Name" rules={[{ required: true, message: 'Please enter vendor name' }]}>
+                                <Input placeholder="Company / Store name..." />
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                            <Form.Item name="category" label="Phân loại" rules={[{ required: true, message: 'Chọn phân loại' }]}>
-                                <Select placeholder="Chọn phân loại NCC">
+                            <Form.Item name="category" label="Category" rules={[{ required: true, message: 'Select category' }]}>
+                                <Select placeholder="Select category NCC">
                                     {Object.entries(VENDOR_CATEGORY_LABELS).map(([k, v]) => (
                                         <Option key={k} value={k}>{v}</Option>
                                     ))}
@@ -395,53 +395,53 @@ export default function VendorPage() {
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                            <Form.Item name="taxId" label="Mã số thuế" rules={[{ required: true, message: 'Vui lòng nhập MST' }]}>
+                            <Form.Item name="taxId" label="Tax ID" rules={[{ required: true, message: 'Please enter MST' }]}>
                                 <Input placeholder="MST..." />
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                            <Form.Item name="phone" label="Số điện thoại" rules={[{ required: true, message: 'Vui lòng nhập SĐT' }]}>
+                            <Form.Item name="phone" label="Phone Number" rules={[{ required: true, message: 'Please enter Phone' }]}>
                                 <Input placeholder="090xxxxxxx" />
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                            <Form.Item name="email" label="Email" rules={[{ type: 'email', message: 'Email không hợp lệ' }]}>
+                            <Form.Item name="email" label="Email" rules={[{ type: 'email', message: 'Invalid Email' }]}>
                                 <Input placeholder="contact@vendor.com" />
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                            <Form.Item name="contactPerson" label="Người liên hệ">
-                                <Input placeholder="Họ tên người phụ trách..." />
+                            <Form.Item name="contactPerson" label="Contact Person">
+                                <Input placeholder="Responsible person name..." />
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                            <Form.Item name="paymentTerms" label="Điều khoản thanh toán">
-                                <Select placeholder="Chọn điều khoản...">
-                                    <Option value="Immediate">Thanh toán ngay (Immediate)</Option>
+                            <Form.Item name="paymentTerms" label="Payment Terms">
+                                <Select placeholder="Select terms...">
+                                    <Option value="Immediate">Immediate (Immediate)</Option>
                                     <Option value="Net 15">Net 15</Option>
-                                    <Option value="Net 30">Net 30 (Mặc định)</Option>
+                                    <Option value="Net 30">Net 30 (Default)</Option>
                                     <Option value="Net 60">Net 60</Option>
                                 </Select>
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                            <Form.Item name="address" label="Địa chỉ">
-                                <Input placeholder="Địa chỉ trụ sở..." />
+                            <Form.Item name="address" label="Address">
+                                <Input placeholder="Headquarters address..." />
                             </Form.Item>
                         </Col>
-                        <Col xs={24}><Divider orientation="left" plain style={{ margin: '8px 0' }}>Thông tin ngân hàng</Divider></Col>
+                        <Col xs={24}><Divider orientation="left" plain style={{ margin: '8px 0' }}>Bank Information</Divider></Col>
                         <Col xs={24} md={8}>
-                            <Form.Item name="bankName" label="Ngân hàng"><Input placeholder="Vietcombank..." /></Form.Item>
+                            <Form.Item name="bankName" label="Bank Name"><Input placeholder="Vietcombank..." /></Form.Item>
                         </Col>
                         <Col xs={24} md={8}>
-                            <Form.Item name="bankAccountNumber" label="Số tài khoản"><Input placeholder="12345678x..." /></Form.Item>
+                            <Form.Item name="bankAccountNumber" label="Account Number"><Input placeholder="12345678x..." /></Form.Item>
                         </Col>
                         <Col xs={24} md={8}>
-                            <Form.Item name="bankBranch" label="Chi nhánh"><Input placeholder="Ba Đình, TP.HCM..." /></Form.Item>
+                            <Form.Item name="bankBranch" label="Branch"><Input placeholder="D1, HCMC..." /></Form.Item>
                         </Col>
                         <Col xs={24}>
-                            <Form.Item name="notes" label="Ghi chú">
-                                <TextArea rows={2} placeholder="Thông tin bổ sung..." />
+                            <Form.Item name="notes" label="Notes">
+                                <TextArea rows={2} placeholder="Additional information..." />
                             </Form.Item>
                         </Col>
                     </Row>
@@ -450,21 +450,21 @@ export default function VendorPage() {
 
             {/* ── Rating Modal ─────────────────────────────────────────────── */}
             <Modal
-                title={<><StarOutlined style={{ color: '#faad14', marginRight: 6 }} />Cập nhật Rating: <strong>{ratingModal.record?.name}</strong></>}
+                title={<><StarOutlined style={{ color: '#faad14', marginRight: 6 }} />Update Rating: <strong>{ratingModal.record?.name}</strong></>}
                 open={ratingModal.open}
                 onCancel={() => { setRatingModal({ open: false, record: null }); ratingForm.resetFields(); }}
                 onOk={handleRatingSubmit}
-                okText="Lưu Rating" cancelText="Hủy"
+                okText="Save Rating" cancelText="Cancel"
                 confirmLoading={ratingLoading}
                 destroyOnClose centered width={400}
             >
                 <Divider style={{ margin: '12px 0' }} />
                 <Form form={ratingForm} layout="vertical">
-                    <Form.Item name="rating" label="Điểm đánh giá (1–5 sao)" rules={[{ required: true, message: 'Vui lòng chọn rating' }]}>
+                    <Form.Item name="rating" label="Rating (1–5 stars)" rules={[{ required: true, message: 'Please select rating' }]}>
                         <Rate allowHalf style={{ fontSize: 28 }} />
                     </Form.Item>
-                    <Form.Item name="comment" label="Nhận xét (tuỳ chọn)">
-                        <TextArea rows={3} placeholder="Nhận xét về hiệu suất giao hàng, chất lượng hàng hoá..." maxLength={500} showCount />
+                    <Form.Item name="comment" label="Comments (optional)">
+                        <TextArea rows={3} placeholder="Comments on delivery performance, quality..." maxLength={500} showCount />
                     </Form.Item>
                 </Form>
             </Modal>

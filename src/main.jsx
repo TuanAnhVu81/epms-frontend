@@ -6,7 +6,7 @@ import './index.css';
 import App2 from './App.jsx';
 
 // Mount React app with Ant Design ConfigProvider (Vietnamese locale)
-// IMPORTANT: <App> wrapper từ antd là bắt buộc để message/notification static methods hoạt động trong AntD 5.x
+// IMPORTANT: <App> wrapper antd wrapper is required for static message/notification methods to work trong AntD 5.x
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ConfigProvider locale={viVN}>

@@ -10,7 +10,7 @@ export default function RoleGuard({ roles }) {
     const hasRole = roles.some((r) => user?.roles?.includes(r));
 
     if (!hasRole) {
-        message.error('Bạn không có quyền truy cập trang này!', 3);
+        message.error('You do not have permission to access this page!', 3);
         return <Navigate to="/" replace />;
     }
 

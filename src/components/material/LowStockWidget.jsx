@@ -15,7 +15,7 @@ const { Text } = Typography;
  * Designed for the ADMIN/MANAGER Dashboard page.
  *
  * Columns (per FE_Agent_Prompt.md):
- *   Mã vật tư | Tên Vật tư | Tồn kho hiện tại | Ngưỡng cảnh báo | Vị trí kho | Tạo PO
+ *   Code materials | Material Description | Stock Content hiện tại | Warning Threshold | Warehouse Location | Create PO
  */
 export default function LowStockWidget() {
     const navigate = useNavigate();
@@ -32,7 +32,7 @@ export default function LowStockWidget() {
             setItems(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Failed to load low stock:', err);
-            setError('Không thể tải danh sách vật tư sắp hết hàng.');
+            setError('Failed to load low stock materials list.');
         } finally {
             setLoading(false);
         }
@@ -44,19 +44,19 @@ export default function LowStockWidget() {
 
     const columns = [
         {
-            title: 'Mã vật tư',
+            title: 'Code materials',
             dataIndex: 'materialCode',
             key: 'materialCode',
             render: (code) => <Text strong style={{ color: '#1677ff' }}>{code}</Text>,
         },
         {
-            title: 'Tên Vật tư',
+            title: 'Material Description',
             dataIndex: 'materialDescription',
             key: 'materialDescription',
             ellipsis: true,
         },
         {
-            title: 'Tồn kho',
+            title: 'Stock Content',
             dataIndex: 'quantityOnHand',
             key: 'quantityOnHand',
             align: 'center',
@@ -67,31 +67,31 @@ export default function LowStockWidget() {
             ),
         },
         {
-            title: 'Ngưỡng tối thiểu',
+            title: 'Minimum Threshold',
             dataIndex: 'minimumStockLevel',
             key: 'minimumStockLevel',
             align: 'center',
             render: (val) => <Text>{val ?? 0}</Text>,
         },
         {
-            title: 'Vị trí kho',
+            title: 'Warehouse Location',
             dataIndex: 'warehouseLocation',
             key: 'warehouseLocation',
             render: (val) => val || '—',
         },
         {
-            title: 'Thao tác',
+            title: 'Actions',
             key: 'action',
             align: 'center',
             render: (_, record) => (
-                <Tooltip title="Tạo PO mua vật tư này">
+                <Tooltip title="Create PO mua materials này">
                     <Button
                         type="primary"
                         size="small"
                         icon={<PlusOutlined />}
                         onClick={() => navigate('/my-orders/create')}
                     >
-                        Tạo PO
+                        Create PO
                     </Button>
                 </Tooltip>
             ),
@@ -103,11 +103,11 @@ export default function LowStockWidget() {
             title={
                 <Space>
                     <WarningOutlined style={{ color: '#ff4d4f' }} />
-                    <Text strong>Cảnh báo Tồn kho thấp (Low Stock Alerts)</Text>
+                    <Text strong>Low Stock Warning (Low Stock Alerts)</Text>
                 </Space>
             }
             extra={
-                <Tooltip title="Tải lại">
+                <Tooltip title="Reload">
                     <Button
                         type="text"
                         icon={<ReloadOutlined />}
@@ -130,7 +130,7 @@ export default function LowStockWidget() {
                 loading={loading}
                 size="small"
                 pagination={{ pageSize: 5, hideOnSinglePage: true }}
-                locale={{ emptyText: '🎉 Tất cả vật tư đều đang ở mức tồn kho an toàn!' }}
+                locale={{ emptyText: '🎉 All materials are at safe stock levels!' }}
             />
         </Card>
     );

@@ -17,7 +17,7 @@ const { Text } = Typography;
  * Design rules from FE_Agent_Prompt.md:
  *   - LOW STOCK badge (red/orange) when lowStock === true or quantityOnHand < minimumStockLevel
  *   - IN STOCK badge (green) otherwise
- *   - Handle 404 gracefully (no stock record yet → show "Chưa có dữ liệu tồn kho")
+ *   - Handle 404 gracefully (no stock record yet → show "No stock data")
  */
 export default function MaterialStockCard({ materialId }) {
     const [stock, setStock] = useState(null);
@@ -66,7 +66,7 @@ export default function MaterialStockCard({ materialId }) {
             title={
                 <Space>
                     <InboxOutlined style={{ color: '#1677ff' }} />
-                    <Text strong>Thông tin Tồn kho</Text>
+                    <Text strong>Stock Information</Text>
                     {!loading && !notFound && stock && (
                         isLowStock
                             ? (
@@ -84,14 +84,14 @@ export default function MaterialStockCard({ materialId }) {
             bordered={false}
             style={{ marginTop: 16 }}
         >
-            {loading && <Spin tip="Đang tải tồn kho..." />}
+            {loading && <Spin tip="Loading stock data..." />}
 
             {!loading && notFound && (
                 <Alert
                     type="info"
                     showIcon
-                    message="Chưa có dữ liệu tồn kho"
-                    description="Vật tư này chưa được nhập kho lần nào."
+                    message="No stock data"
+                    description="This material has never been received."
                 />
             )}
 
@@ -100,7 +100,7 @@ export default function MaterialStockCard({ materialId }) {
                     {/* Stock Progress Bar for visual clarity */}
                     <div style={{ marginBottom: 16 }}>
                         <Text type="secondary" style={{ fontSize: 12 }}>
-                            Tỷ lệ tồn kho (so với mức tối thiểu × 2)
+                            Stock Ratio (vs min threshold × 2)
                         </Text>
                         <Progress
                             percent={stockPercent}
@@ -112,21 +112,21 @@ export default function MaterialStockCard({ materialId }) {
 
                     {/* Inventory detail fields */}
                     <Descriptions column={{ xs: 1, sm: 2, md: 2 }} size="small">
-                        <Descriptions.Item label="Tồn kho thực tế">
+                        <Descriptions.Item label="Actual Stock">
                             <Text strong style={{ color: isLowStock ? '#ff4d4f' : '#52c41a' }}>
                                 {stock.quantityOnHand ?? 0}
                             </Text>
                         </Descriptions.Item>
-                        <Descriptions.Item label="Số lượng bảo lưu">
+                        <Descriptions.Item label="Reserved Quantity">
                             {stock.reservedQuantity ?? 0}
                         </Descriptions.Item>
-                        <Descriptions.Item label="Khả dụng">
+                        <Descriptions.Item label="Available">
                             <Text strong>{stock.availableQuantity ?? 0}</Text>
                         </Descriptions.Item>
-                        <Descriptions.Item label="Ngưỡng tối thiểu">
+                        <Descriptions.Item label="Minimum Threshold">
                             {stock.minimumStockLevel ?? 0}
                         </Descriptions.Item>
-                        <Descriptions.Item label="Vị trí kho" span={2}>
+                        <Descriptions.Item label="Warehouse Location" span={2}>
                             {stock.warehouseLocation || '—'}
                         </Descriptions.Item>
                     </Descriptions>

@@ -41,7 +41,7 @@ export default function POCreatePage() {
                 setMaterials(materials);
             } catch (err) {
                 console.error('Failed to load dropdowns:', err);
-                message.error('Không thể tải danh sách Nhà cung cấp / Vật tư');
+                message.error('Failed to load Vendor / Material list');
             } finally {
                 setLoadingData(false);
             }
@@ -72,11 +72,11 @@ export default function POCreatePage() {
             };
 
             await createPurchaseOrder(payload);
-            message.success('Đã tạo Đơn mua hàng thành công!', 2);
+            message.success('Purchase order created successfully!', 2);
             navigate('/my-orders');
         } catch (error) {
             console.error('Create PO error:', error);
-            message.error(error?.response?.data?.message || 'Lỗi khi tạo đơn hàng. Vui lòng thử lại.');
+            message.error(error?.response?.data?.message || 'Failed to create PO. Please try again.');
         } finally {
             setSubmitting(false);
         }
@@ -85,7 +85,7 @@ export default function POCreatePage() {
     if (loadingData) {
         return (
             <div style={{ padding: '80px 0', textAlign: 'center' }}>
-                <Spin size="large" tip="Đang tải dữ liệu..." />
+                <Spin size="large" tip="Loading data..." />
             </div>
         );
     }
@@ -94,9 +94,9 @@ export default function POCreatePage() {
         <div style={{ padding: '0 12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
                 <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/my-orders')}>
-                    Quay lại
+                    Back
                 </Button>
-                <Title level={3} style={{ margin: 0 }}>Tạo Đơn mua hàng mới</Title>
+                <Title level={3} style={{ margin: 0 }}>Create New Purchase Order</Title>
             </div>
 
             <Form
@@ -111,19 +111,19 @@ export default function POCreatePage() {
                 scrollToFirstError
             >
                 {/* === SECTION 1: Header Info === */}
-                <Card title="Thông tin Đơn hàng" bordered={false} style={{ marginBottom: 16 }}>
+                <Card title="Order Information" bordered={false} style={{ marginBottom: 16 }}>
                     <Row gutter={[16, 0]}>
                         {/* Vendor */}
                         <Col xs={24} md={12}>
                             <Form.Item
                                 name="vendorId"
-                                label="Nhà cung cấp"
-                                rules={[{ required: true, message: 'Vui lòng chọn nhà cung cấp' }]}
+                                label="Vendor"
+                                rules={[{ required: true, message: 'Please select vendors' }]}
                             >
                                 <Select
                                     ref={vendorSelectRef}
                                     showSearch
-                                    placeholder="Tìm và chọn nhà cung cấp..."
+                                    placeholder="Search and select vendors..."
                                     optionFilterProp="label"
                                     optionLabelProp="label"
                                     // Blur after selection to remove cursor completely
@@ -147,7 +147,7 @@ export default function POCreatePage() {
                         <Col xs={24} md={6}>
                             <Form.Item
                                 name="currency"
-                                label="Đơn vị tiền tệ"
+                                label="Currency"
                                 rules={[{ required: true }]}
                             >
                                 <Select onChange={(val) => setCurrency(val)}>
@@ -162,8 +162,8 @@ export default function POCreatePage() {
                         <Col xs={24} md={6}>
                             <Form.Item
                                 name="orderDate"
-                                label="Ngày đặt hàng"
-                                rules={[{ required: true, message: 'Vui lòng chọn ngày đặt hàng' }]}
+                                label="Order Date"
+                                rules={[{ required: true, message: 'Please select an order date' }]}
                             >
                                 <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
                             </Form.Item>
@@ -171,29 +171,29 @@ export default function POCreatePage() {
 
                         {/* Delivery Date */}
                         <Col xs={24} md={8}>
-                            <Form.Item name="deliveryDate" label="Ngày giao hàng dự kiến">
-                                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
+                            <Form.Item name="deliveryDate" label="Expected Delivery Date">
+                                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="Select date" />
                             </Form.Item>
                         </Col>
 
                         {/* Delivery Address */}
                         <Col xs={24} md={16}>
-                            <Form.Item name="deliveryAddress" label="Địa chỉ giao hàng">
-                                <Input placeholder="Số nhà, phường/xã, quận/huyện, tỉnh/thành phố..." />
+                            <Form.Item name="deliveryAddress" label="Delivery Address">
+                                <Input placeholder="Street, Ward, District, City..." />
                             </Form.Item>
                         </Col>
 
                         {/* Notes */}
                         <Col xs={24}>
-                            <Form.Item name="notes" label="Ghi chú">
-                                <TextArea rows={2} placeholder="Ghi chú thêm cho đơn hàng (tuỳ chọn)..." />
+                            <Form.Item name="notes" label="Notes">
+                                <TextArea rows={2} placeholder="Additional notes (optional)..." />
                             </Form.Item>
                         </Col>
                     </Row>
                 </Card>
 
                 {/* === SECTION 2: Line Items === */}
-                <Card title="Danh sách Vật tư" bordered={false} style={{ marginBottom: 16 }}>
+                <Card title="Material List" bordered={false} style={{ marginBottom: 16 }}>
                     <POItemForm
                         materials={materials}
                         poCurrency={currency}
@@ -205,14 +205,14 @@ export default function POCreatePage() {
                 <Card bordered={false}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
                         <div>
-                            <Text type="secondary">Tổng cộng (Grand Total):</Text>
+                            <Text type="secondary">Grand Total (Grand Total):</Text>
                             <div style={{ fontSize: 24, fontWeight: 700, color: '#1677ff', marginTop: 4 }}>
                                 {new Intl.NumberFormat('vi-VN', { style: 'currency', currency }).format(grandTotal)}
                             </div>
                         </div>
 
                         <Space>
-                            <Button onClick={() => navigate('/my-orders')}>Hủy bỏ</Button>
+                            <Button onClick={() => navigate('/my-orders')}>Cancel</Button>
                             <Button
                                 type="primary"
                                 htmlType="submit"
@@ -220,7 +220,7 @@ export default function POCreatePage() {
                                 loading={submitting}
                                 size="large"
                             >
-                                Tạo Đơn hàng
+                                Create orders
                             </Button>
                         </Space>
                     </div>

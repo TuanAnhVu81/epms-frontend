@@ -22,7 +22,7 @@ import { useAuthStore } from '../store/authStore';
 
 const { Title, Text } = Typography;
 
-// Helper: format currency với locale
+// Helper: format currency with locale
 const formatCurrency = (val, currency = 'VND') =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency }).format(val || 0);
 
@@ -57,7 +57,7 @@ export default function PODetailPage() {
             setPo(data);
         } catch (err) {
             console.error('Failed to load PO:', err);
-            setLoadError('Không thể tải chi tiết Đơn mua hàng. Vui lòng thử lại.');
+            setLoadError('Failed to load PO details. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -74,10 +74,10 @@ export default function PODetailPage() {
         try {
             setActionLoading(true);
             await submitPurchaseOrder(id);
-            message.success('Đã trình duyệt đơn hàng thành công!');
+            message.success('PO submitted for approval successfully!');
             loadPO();
         } catch (err) {
-            message.error(err?.response?.data?.message || 'Lỗi khi trình duyệt');
+            message.error(err?.response?.data?.message || 'Error submitting');
         } finally {
             setActionLoading(false);
         }
@@ -87,10 +87,10 @@ export default function PODetailPage() {
         try {
             setActionLoading(true);
             await approvePurchaseOrder(id);
-            message.success('Đã phê duyệt đơn hàng!');
+            message.success('PO approved successfully!');
             loadPO();
         } catch (err) {
-            message.error(err?.response?.data?.message || 'Lỗi khi phê duyệt');
+            message.error(err?.response?.data?.message || 'Error approving');
         } finally {
             setActionLoading(false);
         }
@@ -98,18 +98,18 @@ export default function PODetailPage() {
 
     const handleRejectConfirm = async () => {
         if (!rejectReason.trim()) {
-            message.warning('Vui lòng nhập lý do từ chối');
+            message.warning('Please enter rejection reason');
             return;
         }
         try {
             setActionLoading(true);
             await rejectPurchaseOrder(id, rejectReason.trim());
-            message.success('Đã từ chối đơn hàng!');
+            message.success('PO rejected successfully!');
             setRejectModalOpen(false);
             setRejectReason('');
             loadPO();
         } catch (err) {
-            message.error(err?.response?.data?.message || 'Lỗi khi từ chối');
+            message.error(err?.response?.data?.message || 'Error rejecting');
         } finally {
             setActionLoading(false);
         }
@@ -119,10 +119,10 @@ export default function PODetailPage() {
         try {
             setActionLoading(true);
             await deletePurchaseOrder(id);
-            message.success('Đã hủy đơn hàng!');
+            message.success('PO cancelled successfully!');
             navigate(-1); // Go back after cancel
         } catch (err) {
-            message.error(err?.response?.data?.message || 'Lỗi khi hủy đơn hàng');
+            message.error(err?.response?.data?.message || 'Error cancelling PO');
         } finally {
             setActionLoading(false);
         }
@@ -133,10 +133,10 @@ export default function PODetailPage() {
         try {
             setActionLoading(true);
             await receiveGoods(id);
-            message.success('Xác nhận nhận hàng thành công! Tồn kho đã được cập nhật.');
+            message.success('Receipt confirmed! Stock levels updated.');
             loadPO(); // Refresh to show RECEIVED status
         } catch (err) {
-            message.error(err?.response?.data?.message || 'Lỗi khi xác nhận nhận hàng');
+            message.error(err?.response?.data?.message || 'Error confirming receipt');
         } finally {
             setActionLoading(false);
         }
@@ -147,7 +147,7 @@ export default function PODetailPage() {
     if (loading) {
         return (
             <div style={{ padding: '80px 0', textAlign: 'center' }}>
-                <Spin size="large" tip="Đang tải chi tiết đơn hàng..." />
+                <Spin size="large" tip="Loading PO details..." />
             </div>
         );
     }
@@ -157,7 +157,7 @@ export default function PODetailPage() {
             <div style={{ padding: 24 }}>
                 <Alert type="error" message={loadError} showIcon />
                 <Button style={{ marginTop: 16 }} onClick={() => navigate(-1)}>
-                    <ArrowLeftOutlined /> Quay lại
+                    <ArrowLeftOutlined /> Back
                 </Button>
             </div>
         );
@@ -188,47 +188,47 @@ export default function PODetailPage() {
             render: (_, __, i) => i + 1,
         },
         {
-            title: 'Mã vật tư',
+            title: 'Code materials',
             dataIndex: 'materialCode',
             key: 'materialCode',
             render: (v, record) => <Text strong style={{ fontFamily: 'monospace' }}>{v || record.material?.materialCode}</Text>,
         },
         {
-            title: 'Tên / Mô tả',
+            title: 'Name / Description',
             dataIndex: 'materialDescription',
             key: 'materialDescription',
             render: (v, record) => v || record.material?.description || record.material?.materialName,
         },
         {
-            title: 'ĐVT',
+            title: 'Unit',
             dataIndex: 'unit',
             key: 'unit',
             align: 'center',
             render: (v, record) => v || record.material?.unit,
         },
         {
-            title: 'Số lượng',
+            title: 'Quantity',
             dataIndex: 'quantity',
             key: 'quantity',
             align: 'right',
             render: (v) => v?.toLocaleString('vi-VN'),
         },
         {
-            title: 'Đơn giá',
+            title: 'Unit Price',
             dataIndex: 'unitPrice',
             key: 'unitPrice',
             align: 'right',
             render: (v) => formatCurrency(v, po.currency),
         },
         {
-            title: 'Tiền hàng',
+            title: 'Subtotal',
             dataIndex: 'netAmount',
             key: 'netAmount',
             align: 'right',
             render: (v) => formatCurrency(v, po.currency),
         },
         {
-            title: 'Thuế (%)',
+            title: 'Tax (%)',
             dataIndex: 'taxRate',
             key: 'taxRate',
             align: 'center',
@@ -236,14 +236,14 @@ export default function PODetailPage() {
             render: (v) => `${((v || 0) * 100).toFixed(1)}%`,
         },
         {
-            title: 'Tiền thuế',
+            title: 'Tax Amount',
             dataIndex: 'taxAmount',
             key: 'taxAmount',
             align: 'right',
             render: (v) => formatCurrency(v, po.currency),
         },
         {
-            title: 'Thành tiền',
+            title: 'Total',
             dataIndex: 'lineTotal',
             key: 'lineTotal',
             align: 'right',
@@ -253,7 +253,7 @@ export default function PODetailPage() {
         },
         {
             // Show per-item notes if present; dash when empty
-            title: 'Ghi chú dòng',
+            title: 'Line Notes',
             dataIndex: 'notes',
             key: 'notes',
             width: 180,
@@ -276,7 +276,7 @@ export default function PODetailPage() {
             {/* ── Page Header ─────────────────────────────────────────────── */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>Quay lại</Button>
+                    <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>Back</Button>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <Title level={3} style={{ margin: 0 }}>{po.poNumber}</Title>
@@ -287,7 +287,7 @@ export default function PODetailPage() {
                                 {statusConfig.icon} {statusConfig.label}
                             </Tag>
                         </div>
-                        <Text type="secondary">Tạo bởi <strong>{po.createdBy}</strong> lúc {formatDateTime(po.createdAt)}</Text>
+                        <Text type="secondary">Created by <strong>{po.createdBy}</strong> at {formatDateTime(po.createdAt)}</Text>
                     </div>
                 </div>
 
@@ -298,28 +298,28 @@ export default function PODetailPage() {
                             icon={<EditOutlined />}
                             onClick={() => navigate(`/my-orders/${id}/edit`)}
                         >
-                            Chỉnh sửa
+                            Edit
                         </Button>
                     )}
                     {canSubmit && (
                         <Popconfirm
-                            title="Trình duyệt đơn hàng?"
-                            description="Sau khi trình duyệt, đơn hàng không thể chỉnh sửa."
+                            title="Submit PO?"
+                            description="Once submitted, PO cannot be edited."
                             onConfirm={handleSubmit}
-                            okText="Xác nhận"
-                            cancelText="Hủy"
+                            okText="Confirm"
+                            cancelText="Cancel"
                         >
                             <Button type="primary" icon={<SendOutlined />} loading={actionLoading}>
-                                Trình duyệt
+                                Submit
                             </Button>
                         </Popconfirm>
                     )}
                     {canApprove && (
                         <Popconfirm
-                            title="Phê duyệt đơn hàng?"
+                            title="Approve orders?"
                             onConfirm={handleApprove}
-                            okText="Phê duyệt"
-                            cancelText="Hủy"
+                            okText="Approve"
+                            cancelText="Cancel"
                             okButtonProps={{ style: { background: '#52c41a' } }}
                         >
                             <Button
@@ -328,7 +328,7 @@ export default function PODetailPage() {
                                 style={{ background: '#52c41a', borderColor: '#52c41a' }}
                                 loading={actionLoading}
                             >
-                                Phê duyệt
+                                Approve
                             </Button>
                         </Popconfirm>
                     )}
@@ -339,22 +339,22 @@ export default function PODetailPage() {
                             loading={actionLoading}
                             onClick={() => setRejectModalOpen(true)}
                         >
-                            Từ chối
+                            Reject
                         </Button>
                     )}
                     {/* EMPLOYEE receives goods when status is APPROVED */}
                     {canReceive && (
                         <Popconfirm
-                            title="Xác nhận Nhận hàng?"
+                            title="Confirm Receipt?"
                             description={
                                 <span style={{ maxWidth: 300, display: 'block' }}>
-                                    Hành động này sẽ cập nhật trực tiếp vào số lượng tồn kho của hệ thống.
-                                    Bạn có chắc chắn hàng đã về đầy đủ?
+                                    This action will directly update system inventory quantities.
+                                    Are you sure all goods have arrived?
                                 </span>
                             }
                             onConfirm={handleReceive}
-                            okText="Xác nhận nhận hàng"
-                            cancelText="Hủy"
+                            okText="Confirm Receipt"
+                            cancelText="Cancel"
                             okButtonProps={{ style: { background: '#13c2c2', borderColor: '#13c2c2' } }}
                         >
                             <Button
@@ -362,21 +362,21 @@ export default function PODetailPage() {
                                 icon={<TruckOutlined />}
                                 loading={actionLoading}
                             >
-                                Xác nhận Nhận hàng
+                                Confirm Receipt
                             </Button>
                         </Popconfirm>
                     )}
                     {canDelete && (
                         <Popconfirm
-                            title="Hủy đơn hàng?"
-                            description="Hành động này không thể hoàn tác."
+                            title="Cancel orders?"
+                            description="This action cannot be undone."
                             onConfirm={handleDelete}
-                            okText="Xác nhận hủy"
-                            cancelText="Không"
+                            okText="Confirm Cancel"
+                            cancelText="No"
                             okButtonProps={{ danger: true }}
                         >
                             <Button danger icon={<DeleteOutlined />} loading={actionLoading}>
-                                Hủy đơn
+                                Cancel PO
                             </Button>
                         </Popconfirm>
                     )}
@@ -389,32 +389,32 @@ export default function PODetailPage() {
                 <Col xs={24} lg={16}>
 
                     {/* Header info */}
-                    <Card title="Thông tin Đơn hàng" bordered={false} style={{ marginBottom: 16 }}>
+                    <Card title="Order Information" bordered={false} style={{ marginBottom: 16 }}>
                         <Descriptions column={{ xs: 1, sm: 2 }} size="small">
-                            <Descriptions.Item label="Nhà cung cấp">
+                            <Descriptions.Item label="Vendor">
                                 <Text strong>{po.vendor?.vendorName || po.vendorName || '—'}</Text>
                             </Descriptions.Item>
-                            <Descriptions.Item label="Mã PO">
+                            <Descriptions.Item label="PO Number">
                                 <Text strong style={{ fontFamily: 'monospace', color: '#1677ff' }}>{po.poNumber}</Text>
                             </Descriptions.Item>
-                            <Descriptions.Item label="Ngày đặt hàng">
+                            <Descriptions.Item label="Order Date">
                                 {formatDate(po.orderDate)}
                             </Descriptions.Item>
-                            <Descriptions.Item label="Ngày giao dự kiến">
+                            <Descriptions.Item label="Expected Delivery Date">
                                 {formatDate(po.deliveryDate || po.expectedDeliveryDate)}
                             </Descriptions.Item>
-                            <Descriptions.Item label="Địa chỉ giao hàng" span={2}>
+                            <Descriptions.Item label="Delivery Address" span={2}>
                                 {po.deliveryAddress || '—'}
                             </Descriptions.Item>
-                            <Descriptions.Item label="Tiền tệ">{po.currency}</Descriptions.Item>
-                            <Descriptions.Item label="Ghi chú" span={2}>
-                                {po.notes || <Text type="secondary">(Không có)</Text>}
+                            <Descriptions.Item label="Currency">{po.currency}</Descriptions.Item>
+                            <Descriptions.Item label="Notes" span={2}>
+                                {po.notes || <Text type="secondary">(None)</Text>}
                             </Descriptions.Item>
                         </Descriptions>
                     </Card>
 
                     {/* Line items table */}
-                    <Card title={`Danh sách Vật tư (${po.items?.length || 0} mục)`} bordered={false}>
+                    <Card title={`Material List (${po.items?.length || 0} items)`} bordered={false}>
                         <Table
                             columns={itemColumns}
                             dataSource={po.items || []}
@@ -426,7 +426,7 @@ export default function PODetailPage() {
                                 <Table.Summary fixed>
                                     <Table.Summary.Row style={{ background: '#fafafa' }}>
                                         <Table.Summary.Cell index={0} colSpan={6} align="right">
-                                            <Text strong>Tổng cộng</Text>
+                                            <Text strong>Grand Total</Text>
                                         </Table.Summary.Cell>
                                         <Table.Summary.Cell index={1} align="right">
                                             <Text>{formatCurrency(po.totalAmount, po.currency)}</Text>
@@ -440,7 +440,7 @@ export default function PODetailPage() {
                                                 {formatCurrency(po.grandTotal, po.currency)}
                                             </Text>
                                         </Table.Summary.Cell>
-                                        {/* Empty cell for the Ghi chú dòng column */}
+                                        {/* Empty cell for the Line Notes column */}
                                         <Table.Summary.Cell index={5} />
                                     </Table.Summary.Row>
                                 </Table.Summary>
@@ -453,14 +453,14 @@ export default function PODetailPage() {
                 <Col xs={24} lg={8}>
 
                     {/* Financial summary card */}
-                    <Card title="Tổng kết tài chính" bordered={false} style={{ marginBottom: 16 }}>
+                    <Card title="Financial Summary" bordered={false} style={{ marginBottom: 16 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Text type="secondary">Tiền hàng (trước thuế)</Text>
+                                <Text type="secondary">Subtotal (before tax)</Text>
                                 <Text>{formatCurrency(po.totalAmount, po.currency)}</Text>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Text type="secondary">Tổng tiền thuế</Text>
+                                <Text type="secondary">Total Tax</Text>
                                 <Text>{formatCurrency(po.taxAmount, po.currency)}</Text>
                             </div>
                             <Divider style={{ margin: '4px 0' }} />
@@ -476,7 +476,7 @@ export default function PODetailPage() {
                     {/* Approval info — only show if PO has gone through approval flow */}
                     {(po.approver || po.approvedDate || po.rejectionReason) && (
                         <Card
-                            title="Thông tin Phê duyệt"
+                            title="Approval Information"
                             bordered={false}
                             style={{ marginBottom: 16 }}
                             headStyle={{
@@ -486,17 +486,17 @@ export default function PODetailPage() {
                         >
                             <Descriptions column={1} size="small">
                                 {po.approver && (
-                                    <Descriptions.Item label="Người phê duyệt">
+                                    <Descriptions.Item label="Approved by">
                                         <Text strong>{po.approver.fullName || po.approver.username}</Text>
                                     </Descriptions.Item>
                                 )}
                                 {po.approvedDate && (
-                                    <Descriptions.Item label="Ngày phê duyệt">
+                                    <Descriptions.Item label="Approval Date">
                                         {formatDateTime(po.approvedDate)}
                                     </Descriptions.Item>
                                 )}
                                 {po.rejectionReason && (
-                                    <Descriptions.Item label="Lý do từ chối">
+                                    <Descriptions.Item label="Reason rejected">
                                         <Text type="danger">{po.rejectionReason}</Text>
                                     </Descriptions.Item>
                                 )}
@@ -505,19 +505,19 @@ export default function PODetailPage() {
                     )}
 
                     {/* Audit info */}
-                    <Card title="Thông tin Audit" bordered={false}>
+                    <Card title="Audit Information" bordered={false}>
                         <Descriptions column={1} size="small">
-                            <Descriptions.Item label="Tạo bởi">
+                            <Descriptions.Item label="Created by">
                                 <Text strong>{po.createdBy}</Text>
                             </Descriptions.Item>
-                            <Descriptions.Item label="Ngày tạo">
+                            <Descriptions.Item label="Created Date">
                                 {formatDateTime(po.createdAt)}
                             </Descriptions.Item>
-                            <Descriptions.Item label="Cập nhật lần cuối">
+                            <Descriptions.Item label="Last Updated">
                                 {formatDateTime(po.modifiedAt)}
                             </Descriptions.Item>
-                            <Descriptions.Item label="Số mục vật tư">
-                                {po.items?.length || 0} dòng
+                            <Descriptions.Item label="Number of items">
+                                {po.items?.length || 0} lines
                             </Descriptions.Item>
                         </Descriptions>
                     </Card>
@@ -526,22 +526,22 @@ export default function PODetailPage() {
 
             {/* ── Reject Modal ───────────────────────────────────────────── */}
             <Modal
-                title={<Text type="danger"><CloseCircleOutlined /> Từ chối Đơn mua hàng</Text>}
+                title={<Text type="danger"><CloseCircleOutlined /> Reject Purchase Order</Text>}
                 open={rejectModalOpen}
                 onCancel={() => {
                     setRejectModalOpen(false);
                     setRejectReason('');
                 }}
                 onOk={handleRejectConfirm}
-                okText="Xác nhận từ chối"
-                cancelText="Hủy"
+                okText="Confirm rejected"
+                cancelText="Cancel"
                 okButtonProps={{ danger: true, loading: actionLoading, disabled: !rejectReason.trim() }}
                 destroyOnClose
             >
-                <p>Bạn đang từ chối đơn hàng <strong>{po.poNumber}</strong>. Vui lòng nhập lý do:</p>
+                <p>You are rejecting PO <strong>{po.poNumber}</strong>. Please enter reason:</p>
                 <Input.TextArea
                     rows={4}
-                    placeholder="Nhập lý do từ chối (bắt buộc)..."
+                    placeholder="Enter rejection reason (Required)..."
                     value={rejectReason}
                     onChange={(e) => setRejectReason(e.target.value)}
                     maxLength={500}

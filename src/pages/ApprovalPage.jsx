@@ -45,7 +45,7 @@ export default function ApprovalPage() {
             setTotal(totalCount);
         } catch (error) {
             console.error('Error fetching POs:', error);
-            message.error('Không thể tải danh sách Đơn mua hàng để duyệt');
+            message.error('Failed to load PO approval list');
         } finally {
             setLoading(false);
         }
@@ -77,10 +77,10 @@ export default function ApprovalPage() {
     const handleApprove = async (id) => {
         try {
             await approvePurchaseOrder(id);
-            message.success('Đã duyệt đơn mua hàng thành công!');
+            message.success('approved PO successfully!');
             fetchPOs({ page: pagination.current, size: pagination.pageSize, status: statusFilter, keyword: searchKeyword, sort: sorter });
         } catch (error) {
-            message.error('Lỗi khi duyệt đơn hàng');
+            message.error('Failed to approve PO');
         }
     };
 
@@ -92,47 +92,47 @@ export default function ApprovalPage() {
 
     const handleReject = async () => {
         if (!rejectReason.trim()) {
-            message.warning('Vui lòng nhập lý do từ chối');
+            message.warning('Please enter rejection reason');
             return;
         }
 
         try {
             await rejectPurchaseOrder(rejectId, rejectReason);
-            message.success('Đã từ chối đơn hàng!');
+            message.success('PO rejected successfully!');
             setRejectModalOpen(false);
             fetchPOs(pagination.current, pagination.pageSize, statusFilter, searchKeyword);
         } catch (error) {
-            message.error('Lỗi khi từ chối đơn hàng');
+            message.error('Failed to reject PO');
         }
     };
 
     const columns = [
         {
-            title: 'Mã PO',
+            title: 'PO Number',
             dataIndex: 'poNumber',
             key: 'poNumber',
             sorter: true,
             render: (text) => <strong>{text}</strong>,
         },
         {
-            title: 'Nhà cung cấp',
+            title: 'Vendor',
             dataIndex: 'vendorName',
             key: 'vendorName',
             sorter: true,
         },
         {
-            title: 'Người tạo',
+            title: 'Creator',
             dataIndex: 'createdBy',
             key: 'createdBy',
         },
         {
-            title: 'Ngày đặt',
+            title: 'Order Date',
             dataIndex: 'orderDate',
             key: 'orderDate',
             sorter: true,
         },
         {
-            title: 'Trạng thái',
+            title: 'Status',
             dataIndex: 'status',
             key: 'status',
             align: 'center',
@@ -146,14 +146,14 @@ export default function ApprovalPage() {
             },
         },
         {
-            title: 'Tổng tiền',
+            title: 'Total Amount',
             dataIndex: 'grandTotal',
             key: 'grandTotal',
             align: 'right',
             render: (val, record) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: record.currency || 'VND' }).format(val || 0),
         },
         {
-            title: 'Thao tác',
+            title: 'Actions',
             key: 'action',
             align: 'center',
             render: (_, record) => {
@@ -161,7 +161,7 @@ export default function ApprovalPage() {
 
                 return (
                     <Space size="middle">
-                        <Tooltip title="Xem chi tiết (Read Only)">
+                        <Tooltip title="View Details (Read Only)">
                             <Button
                                 type="text"
                                 icon={<EyeOutlined />}
@@ -172,12 +172,12 @@ export default function ApprovalPage() {
                         {isPending && (
                             <>
                                 <Popconfirm
-                                    title="Duyệt đơn hàng ngay?"
+                                    title="Approve orders ngay?"
                                     onConfirm={() => handleApprove(record.id)}
-                                    okText="Đồng ý"
-                                    cancelText="Hủy"
+                                    okText="Confirm"
+                                    cancelText="Cancel"
                                 >
-                                    <Tooltip title="Duyệt / Approve">
+                                    <Tooltip title="Approve / Approve">
                                         <Button
                                             type="text"
                                             icon={<CheckCircleOutlined style={{ color: '#52c41a', fontSize: 18 }} />}
@@ -185,7 +185,7 @@ export default function ApprovalPage() {
                                     </Tooltip>
                                 </Popconfirm>
 
-                                <Tooltip title="Từ chối / Reject">
+                                <Tooltip title="Reject / Reject">
                                     <Button
                                         type="text"
                                         danger
@@ -214,26 +214,26 @@ export default function ApprovalPage() {
     return (
         <div style={{ padding: '0 12px' }}>
             <div style={{ marginBottom: 24 }}>
-                <Title level={3} style={{ margin: 0, padding: 0 }}>Duyệt Đơn Mua Hàng (Approvals)</Title>
+                <Title level={3} style={{ margin: 0, padding: 0 }}>Purchase Order Approvals</Title>
                 <Text type="secondary" style={{ fontSize: 12 }}>
                     <ThunderboltOutlined style={{ color: '#faad14', marginRight: 4 }} />
                     Powered by&nbsp;
                     <Text code style={{ fontSize: 11 }}>OData V4</Text>
-                    &nbsp;— Hỗ trợ tìm kiếm, lọc, sắp xếp phía Server
+                    &nbsp;— Server-side search, filter, and sort supported
                 </Text>
             </div>
 
             <Card bordered={false} style={{ marginBottom: 16 }}>
                 <Space style={{ marginBottom: 16 }} wrap>
                     <Input.Search
-                        placeholder="Tìm mã PO, Tên NCC..."
+                        placeholder="Search PO Number, Vendor Name..."
                         allowClear
                         onSearch={handleSearch}
                         style={{ width: 300 }}
                     />
 
                     <Select
-                        placeholder="Lọc trạng thái"
+                        placeholder="Filter by Status"
                         allowClear
                         value={statusFilter}
                         style={{ width: 220 }}
@@ -250,7 +250,7 @@ export default function ApprovalPage() {
                     </Select>
 
                     {/* Reload button */}
-                    <Tooltip title="Làm mới">
+                    <Tooltip title="Refresh">
                         <Button
                             icon={<ReloadOutlined />}
                             onClick={() => fetchPOs()}
@@ -279,7 +279,7 @@ export default function ApprovalPage() {
                         pageSize: pagination.pageSize,
                         total: total,
                         showSizeChanger: true,
-                        showTotal: (t) => `Tổng số ${t} đơn hàng`,
+                        showTotal: (t) => `Total ${t} orders`,
                     }}
                     onChange={handleTableChange}
                     scroll={{ x: 'max-content' }}
@@ -288,22 +288,22 @@ export default function ApprovalPage() {
 
             {/* Reject Reason Modal */}
             <Modal
-                title="Từ chối duyệt cấu hình PO"
+                title="Reject PO"
                 open={isRejectModalOpen}
                 onOk={handleReject}
                 onCancel={() => setRejectModalOpen(false)}
-                okText="Từ chối ngay"
-                cancelText="Hủy"
+                okText="Reject ngay"
+                cancelText="Cancel"
                 okButtonProps={{ danger: true }}
             >
                 <div style={{ marginBottom: 12 }}>
-                    Hãy nhập lý do từ chối (bắt buộc):
+                    Please enter rejection reason (Required):
                 </div>
                 <TextArea
                     rows={4}
                     value={rejectReason}
                     onChange={(e) => setRejectReason(e.target.value)}
-                    placeholder="Vui lòng nêu rõ lý do từ chối..."
+                    placeholder="Specify rejection reason..."
                 />
             </Modal>
         </div>

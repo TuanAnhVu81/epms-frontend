@@ -23,15 +23,15 @@ export default function Sidebar({ collapsed }) {
         (isAdmin || isManager) && { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
 
         // ADMIN menus
-        isAdmin && { key: '/vendors', icon: <ShopOutlined />, label: 'Nhà cung cấp' },
-        isAdmin && { key: '/materials', icon: <AppstoreOutlined />, label: 'Vật tư' },
-        isAdmin && { key: '/users', icon: <TeamOutlined />, label: 'Quản lý Nhân viên' },
+        isAdmin && { key: '/vendors', icon: <ShopOutlined />, label: 'Vendors' },
+        isAdmin && { key: '/materials', icon: <AppstoreOutlined />, label: 'Materials' },
+        isAdmin && { key: '/users', icon: <TeamOutlined />, label: 'User Management' },
 
         // EMPLOYEE menus
-        isEmployee && { key: '/my-orders', icon: <FileTextOutlined />, label: 'Quản lý PO (Employee)' },
+        isEmployee && { key: '/my-orders', icon: <FileTextOutlined />, label: 'My Purchase Orders' },
 
         // MANAGER menus
-        isManager && { key: '/approvals', icon: <CheckCircleOutlined />, label: 'Duyệt PO (Manager)' },
+        isManager && { key: '/approvals', icon: <CheckCircleOutlined />, label: 'PO Approvals' },
     ].filter(Boolean);
 
     return (

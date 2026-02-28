@@ -111,7 +111,7 @@ export default function MaterialPage() {
             setData([]);
             setTotal(0);
             setOdataError(true);
-            message.error('Không thể tải dữ liệu Vật tư qua OData');
+            message.error('Failed to fetch data Material qua OData');
         } finally {
             setLoading(false);
         }
@@ -172,16 +172,16 @@ export default function MaterialPage() {
             setFormLoading(true);
             if (formModal.record) {
                 await updateMaterial(formModal.record.id, values);
-                message.success('Đã cập nhật Vật tư thành công!');
+                message.success('Material updated successfully!');
             } else {
                 await createMaterial(values);
-                message.success('Đã thêm Vật tư mới thành công!');
+                message.success('New material added successfully!');
             }
             setFormModal({ open: false, record: null });
             fetchMaterials({ page: pagination.current, pageSize: pagination.pageSize });
         } catch (err) {
             if (err?.errorFields) return;
-            message.error(err?.response?.data?.message || 'Lỗi khi lưu Vật tư');
+            message.error(err?.response?.data?.message || 'Error saving Material');
         } finally {
             setFormLoading(false);
         }
@@ -190,17 +190,17 @@ export default function MaterialPage() {
     const handleDelete = async (id) => {
         try {
             await deleteMaterial(id);
-            message.success('Đã tắt hoạt động Vật tư!');
+            message.success('Material deactivated!');
             fetchMaterials({ page: pagination.current, pageSize: pagination.pageSize });
         } catch (err) {
-            message.error(err?.response?.data?.message || 'Lỗi khi xóa');
+            message.error(err?.response?.data?.message || 'Error deleting');
         }
     };
 
     // ── Table columns (sorter=true → triggers $orderby via OData) ───────────
     const columns = [
         {
-            title: 'Mã Vật tư',
+            title: 'Material Code',
             dataIndex: 'materialCode',
             key: 'materialCode',
             width: 140,
@@ -208,14 +208,14 @@ export default function MaterialPage() {
             render: (v) => <Text strong style={{ fontFamily: 'monospace', color: '#1677ff' }}>{v}</Text>,
         },
         {
-            title: 'Mô tả / Tên',
+            title: 'Description / Name',
             dataIndex: 'description',
             key: 'description',
             sorter: true, // OData: $orderby=description asc/desc
             ellipsis: true,
         },
         {
-            title: 'Loại vật tư',
+            title: 'Material Type',
             dataIndex: 'materialType',
             key: 'materialType',
             width: 140,
@@ -228,12 +228,12 @@ export default function MaterialPage() {
             },
         },
         {
-            title: 'Đơn giá cơ bản',
+            title: 'Base Unit Price',
             dataIndex: 'basePrice',
             key: 'basePrice',
             align: 'right',
             width: 160,
-            sorter: true, // OData: $orderby=basePrice desc → sort đắt nhất lên đầu!
+            sorter: true, // OData: $orderby=basePrice desc → sort most expensive first!
             render: (v, record) => (
                 <Text type={v ? undefined : 'secondary'}>
                     {v != null ? formatCurrency(v, record.currency || 'VND') : '—'}
@@ -241,21 +241,21 @@ export default function MaterialPage() {
             ),
         },
         {
-            title: 'ĐVT',
+            title: 'Unit',
             dataIndex: 'unit',
             key: 'unit',
             align: 'center',
             width: 80,
         },
         {
-            title: 'Danh mục',
+            title: 'Category',
             dataIndex: 'category',
             key: 'category',
             width: 130,
             ellipsis: true,
         },
         {
-            title: 'Trạng thái',
+            title: 'Status',
             dataIndex: 'isActive',
             key: 'isActive',
             align: 'center',
@@ -265,17 +265,17 @@ export default function MaterialPage() {
                 : <Tag icon={<StopOutlined />} color="default">Inactive</Tag>,
         },
         {
-            title: 'Thao tác',
+            title: 'Actions',
             key: 'actions',
             width: 120,
             align: 'center',
             fixed: 'right',
             render: (_, record) => (
                 <Space>
-                    <Tooltip title="Chỉnh sửa">
+                    <Tooltip title="Edit">
                         <Button size="small" icon={<EditOutlined />} onClick={() => openFormModal(record)} />
                     </Tooltip>
-                    <Tooltip title="Xem tồn kho">
+                    <Tooltip title="View Stock">
                         <Button
                             size="small"
                             icon={<InboxOutlined style={{ color: '#13c2c2' }} />}
@@ -283,14 +283,14 @@ export default function MaterialPage() {
                         />
                     </Tooltip>
                     <Popconfirm
-                        title="Xóa / Tắt hoạt động?"
-                        description="Vật tư sẽ bị đánh dấu Inactive (soft delete)."
+                        title="Delete / Deactivate?"
+                        description="Material will be marked as Inactive (soft delete)."
                         onConfirm={() => handleDelete(record.id)}
-                        okText="Xác nhận"
-                        cancelText="Hủy"
+                        okText="Confirm"
+                        cancelText="Cancel"
                         okButtonProps={{ danger: true }}
                     >
-                        <Tooltip title="Xóa (Soft Delete)">
+                        <Tooltip title="Delete (Soft Delete)">
                             <Button size="small" danger icon={<DeleteOutlined />} />
                         </Tooltip>
                     </Popconfirm>
@@ -300,8 +300,8 @@ export default function MaterialPage() {
     ];
 
     const stockModalTitle = stockModal.record
-        ? `Tồn kho: ${stockModal.record.materialCode} — ${stockModal.record.description}`
-        : 'Thông tin Tồn kho';
+        ? `Stock Content: ${stockModal.record.materialCode} — ${stockModal.record.description}`
+        : 'Stock Information';
 
     // Build OData $filter string displayed in UI (live preview)
     const liveFilterDisplay = (() => {
@@ -319,26 +319,26 @@ export default function MaterialPage() {
                 <div>
                     <Title level={3} style={{ margin: 0 }}>
                         <AppstoreOutlined style={{ marginRight: 8, color: '#1677ff' }} />
-                        Quản lý Vật tư
+                        Material Management
                     </Title>
                     <Text type="secondary" style={{ fontSize: 12 }}>
                         <ThunderboltOutlined style={{ color: '#faad14', marginRight: 4 }} />
                         Powered by <Text code style={{ fontSize: 11 }}>OData V4</Text>
-                        &nbsp;— Sort, Filter, Search phía Server
+                        &nbsp;— Sort, Filter, Search Server-side
                     </Text>
                 </div>
                 <Button type="primary" icon={<PlusOutlined />} onClick={() => openFormModal()}>
-                    Thêm Vật tư
+                    Add Material
                 </Button>
             </div>
 
             {/* ── OData Error Banner ───────────────────────────────────────── */}
             {odataError && (
                 <Alert type="warning" showIcon
-                    message="OData V4 Endpoint không khả dụng"
-                    description="Endpoint: GET /odata/Materials — Vui lòng kiểm tra Backend."
+                    message="OData V4 Endpoint unavailable"
+                    description="Endpoint: GET /odata/Materials — Please check backend."
                     style={{ marginBottom: 16 }}
-                    action={<Button size="small" onClick={handleRefresh}>Thử lại</Button>}
+                    action={<Button size="small" onClick={handleRefresh}>Retry</Button>}
                 />
             )}
 
@@ -347,7 +347,7 @@ export default function MaterialPage() {
                 <Space style={{ marginBottom: 16 }} wrap>
                     {/* Keyword search → OData $filter=contains(description,'kw') */}
                     <Input.Search
-                        placeholder="Tìm theo Tên hoặc Mã vật tư..."
+                        placeholder="Search by Name or Code materials..."
                         allowClear
                         onSearch={handleSearch}
                         style={{ width: 280 }}
@@ -355,17 +355,17 @@ export default function MaterialPage() {
 
                     {/* Active filter → OData $filter=isActive eq true/false */}
                     <Select
-                        placeholder="Lọc theo trạng thái"
+                        placeholder="Filter by status"
                         allowClear
                         style={{ width: 180 }}
                         onChange={handleActiveChange}
                         value={activeFilter}
                     >
-                        <Option value={true}>✅ Đang Active</Option>
-                        <Option value={false}>⛔ Đã Inactive</Option>
+                        <Option value={true}>✅ Active</Option>
+                        <Option value={false}>⛔ Inactive</Option>
                     </Select>
 
-                    <Tooltip title="Làm mới">
+                    <Tooltip title="Refresh">
                         <Button icon={<ReloadOutlined />} onClick={handleRefresh} loading={loading} />
                     </Tooltip>
 
@@ -391,7 +391,7 @@ export default function MaterialPage() {
                         total: total,
                         showSizeChanger: true,
                         pageSizeOptions: ['5', '10', '20', '50'],
-                        showTotal: (t, range) => `${range[0]}–${range[1]} / ${t} vật tư`,
+                        showTotal: (t, range) => `${range[0]}–${range[1]} / ${t} materials`,
                     }}
                     rowClassName={(record) => !record.isActive ? 'ant-table-row-disabled' : ''}
                 />
@@ -401,12 +401,12 @@ export default function MaterialPage() {
                 Create / Edit Modal
             ══════════════════════════════════════════════════════════════ */}
             <Modal
-                title={formModal.record ? '✏️ Chỉnh sửa Vật tư' : '➕ Thêm Vật tư mới'}
+                title={formModal.record ? '✏️ Edit Material' : '➕ Add New Material'}
                 open={formModal.open}
                 onCancel={() => { setFormModal({ open: false, record: null }); form.resetFields(); }}
                 onOk={handleFormSubmit}
-                okText={formModal.record ? 'Lưu thay đổi' : 'Tạo mới'}
-                cancelText="Hủy"
+                okText={formModal.record ? 'Save Changes' : 'Create'}
+                cancelText="Cancel"
                 confirmLoading={formLoading}
                 width={720}
                 centered
@@ -420,10 +420,10 @@ export default function MaterialPage() {
                         <Col xs={24} md={12}>
                             <Form.Item
                                 name="materialType"
-                                label="Loại vật tư (SAP)"
-                                rules={[{ required: true, message: 'Chọn loại vật tư' }]}
+                                label="Material Type (SAP)"
+                                rules={[{ required: true, message: 'Select material type' }]}
                             >
-                                <Select placeholder="Chọn loại...">
+                                <Select placeholder="Select type...">
                                     {Object.entries(MATERIAL_TYPE_LABELS).map(([k, v]) => (
                                         <Option key={k} value={k}>{v}</Option>
                                     ))}
@@ -431,30 +431,30 @@ export default function MaterialPage() {
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                            <Form.Item name="category" label="Danh mục">
+                            <Form.Item name="category" label="Category">
                                 <Input placeholder="IT, Office, Manufacturing..." />
                             </Form.Item>
                         </Col>
                         <Col xs={24}>
                             <Form.Item
                                 name="description"
-                                label="Mô tả / Tên vật tư"
-                                rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
+                                label="Description / Name materials"
+                                rules={[{ required: true, message: 'Please enter description' }]}
                             >
-                                <Input placeholder="Tên đầy đủ của vật tư..." />
+                                <Input placeholder="Full material description..." />
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={8}>
                             <Form.Item
                                 name="unit"
-                                label="Đơn vị tính (ĐVT)"
-                                rules={[{ required: true, message: 'Nhập ĐVT' }]}
+                                label="Unit of Measure (Unit)"
+                                rules={[{ required: true, message: 'Enter Unit' }]}
                             >
                                 <Input placeholder="PCS, KG, M2..." />
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={8}>
-                            <Form.Item label="Đơn giá cơ bản" style={{ marginBottom: 0 }}>
+                            <Form.Item label="Base Unit Price" style={{ marginBottom: 0 }}>
                                 <Space.Compact style={{ width: '100%' }}>
                                     <Form.Item name="currency" noStyle>
                                         <Select style={{ width: '35%' }}>
@@ -476,31 +476,31 @@ export default function MaterialPage() {
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                            <Form.Item name="manufacturer" label="Nhà sản xuất">
+                            <Form.Item name="manufacturer" label="Manufacturer">
                                 <Input placeholder="Apple, Samsung, Double A..." />
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                            <Form.Item name="imageUrl" label="Link hình ảnh">
+                            <Form.Item name="imageUrl" label="Image URL">
                                 <Input placeholder="https://..." />
                             </Form.Item>
                         </Col>
                         <Col xs={24}>
-                            <Form.Item name="specifications" label="Thông số kỹ thuật">
+                            <Form.Item name="specifications" label="Specifications">
                                 <TextArea rows={2} placeholder="RAM 16GB, SSD 512GB..." />
                             </Form.Item>
                         </Col>
                         {/* Show active toggle only in Edit mode */}
                         {formModal.record && (
                             <Col xs={24} md={8}>
-                                <Form.Item name="isActive" label="Trạng thái" valuePropName="checked">
+                                <Form.Item name="isActive" label="Status" valuePropName="checked">
                                     <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
                                 </Form.Item>
                             </Col>
                         )}
                         <Col xs={24}>
-                            <Form.Item name="notes" label="Ghi chú">
-                                <TextArea rows={2} placeholder="Thông tin bổ sung về vật tư..." />
+                            <Form.Item name="notes" label="Notes">
+                                <TextArea rows={2} placeholder="Additional material info..." />
                             </Form.Item>
                         </Col>
                     </Row>

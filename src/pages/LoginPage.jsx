@@ -22,13 +22,13 @@ export default function LoginPage() {
             const result = await loginApi(values);  // returns { token, expiresIn }
 
             if (!result?.token) {
-                message.error('Lỗi: Server không trả về token!');
+                message.error('Error: Server did not return a token!');
                 setLoading(false);
                 return;
             }
 
             login(result.token);  // decode JWT and store roles in Zustand
-            message.success('Đăng nhập thành công!');
+            message.success('Login successful!');
             navigate('/', { replace: true });
 
         } catch (error) {
@@ -36,7 +36,7 @@ export default function LoginPage() {
             // Network error: backend not running or CORS blocked
             if (!error.response) {
                 message.error(
-                    'Không kết nối được với server. Vui lòng kiểm tra backend đang chạy.'
+                    'Cannot connect to server. Please check backend.'
                 );
             } else {
                 // API error: wrong credentials, server error, etc.
@@ -52,7 +52,7 @@ export default function LoginPage() {
                 <div style={styles.header}>
                     <div style={styles.logo}>EPMS</div>
                     <Title level={3} style={styles.title}>
-                        Đăng nhập hệ thống
+                        Login system
                     </Title>
                     <Text type="secondary">Enterprise Procurement Management System</Text>
                 </div>
@@ -67,11 +67,11 @@ export default function LoginPage() {
                     {/* Username field */}
                     <Form.Item
                         name="username"
-                        rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập' }]}
+                        rules={[{ required: true, message: 'Please enter username' }]}
                     >
                         <Input
                             prefix={<UserOutlined />}
-                            placeholder="Tên đăng nhập"
+                            placeholder="Username"
                             autoComplete="username"
                         />
                     </Form.Item>
@@ -79,11 +79,11 @@ export default function LoginPage() {
                     {/* Password field */}
                     <Form.Item
                         name="password"
-                        rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
+                        rules={[{ required: true, message: 'Please enter password' }]}
                     >
                         <Input.Password
                             prefix={<LockOutlined />}
-                            placeholder="Mật khẩu"
+                            placeholder="Password"
                             autoComplete="current-password"
                         />
                     </Form.Item>
@@ -97,7 +97,7 @@ export default function LoginPage() {
                             block
                             loading={loading}
                         >
-                            Đăng nhập
+                            Login
                         </Button>
                     </Form.Item>
                 </Form>

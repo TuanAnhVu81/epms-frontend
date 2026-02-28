@@ -77,7 +77,7 @@ export default function POItemForm({ materials = [], poCurrency = 'VND', onTotal
                 {
                     validator: async (_, items) => {
                         if (!items || items.length < 1) {
-                            return Promise.reject(new Error('Đơn hàng phải có ít nhất 1 mục vật tư'));
+                            return Promise.reject(new Error('PO must have at least 1 material item'));
                         }
                     },
                 },
@@ -98,7 +98,7 @@ export default function POItemForm({ materials = [], poCurrency = 'VND', onTotal
                                 key={key}
                                 size="small"
                                 style={{ marginBottom: 12, background: '#fafafa', border: '1px solid #f0f0f0' }}
-                                title={<Text strong>Mục #{index + 1}</Text>}
+                                title={<Text strong>Item #{index + 1}</Text>}
                                 extra={
                                     <Button
                                         type="text"
@@ -111,7 +111,7 @@ export default function POItemForm({ materials = [], poCurrency = 'VND', onTotal
                                             setTimeout(() => recalculate(-1), 0);
                                         }}
                                     >
-                                        Xóa
+                                        Delete
                                     </Button>
                                 }
                             >
@@ -121,13 +121,13 @@ export default function POItemForm({ materials = [], poCurrency = 'VND', onTotal
                                         <Form.Item
                                             {...restField}
                                             name={[name, 'materialId']}
-                                            label="Vật tư"
-                                            rules={[{ required: true, message: 'Vui lòng chọn vật tư' }]}
+                                            label="Material"
+                                            rules={[{ required: true, message: 'Please select materials' }]}
                                         >
                                             <Select
                                                 ref={(el) => { materialRefs.current[name] = el; }}
                                                 showSearch
-                                                placeholder="Tìm và chọn vật tư..."
+                                                placeholder="Search and select materials..."
                                                 optionFilterProp="label"
                                                 optionLabelProp="label"
                                                 onChange={(val) => handleMaterialSelect(val, name)}
@@ -147,7 +147,7 @@ export default function POItemForm({ materials = [], poCurrency = 'VND', onTotal
                                                             <Text strong>{m.description || m.materialDescription}</Text>
                                                             <br />
                                                             <Text type="secondary" style={{ fontSize: 12 }}>
-                                                                {m.materialCode} — ĐVT: {m.unit || m.unitOfMeasure}
+                                                                {m.materialCode} — Unit: {m.unit || m.unitOfMeasure}
                                                             </Text>
                                                         </div>
                                                     </Option>
@@ -161,10 +161,10 @@ export default function POItemForm({ materials = [], poCurrency = 'VND', onTotal
                                         <Form.Item
                                             {...restField}
                                             name={[name, 'quantity']}
-                                            label="Số lượng"
+                                            label="Quantity"
                                             rules={[
-                                                { required: true, message: 'Bắt buộc' },
-                                                { type: 'number', min: 0.01, message: 'Phải > 0' },
+                                                { required: true, message: 'Required' },
+                                                { type: 'number', min: 0.01, message: 'Must be > 0' },
                                             ]}
                                         >
                                             <InputNumber
@@ -191,20 +191,20 @@ export default function POItemForm({ materials = [], poCurrency = 'VND', onTotal
                                                     if (catalogPrice != null) {
                                                         return (
                                                             <span>
-                                                                Đơn giá&nbsp;
+                                                                Unit Price&nbsp;
                                                                 <Text type={hasMismatch ? 'warning' : 'secondary'} style={{ fontSize: 11 }}>
-                                                                    (gốc: {formatAmount(catalogPrice, catalogCurrency || poCurrency)})
-                                                                    {hasMismatch && ` ⚠️ khác tiền PO (${poCurrency})`}
+                                                                    (original: {formatAmount(catalogPrice, catalogCurrency || poCurrency)})
+                                                                    {hasMismatch && ` ⚠️ differs from PO Currency (${poCurrency})`}
                                                                 </Text>
                                                             </span>
                                                         );
                                                     }
-                                                    return 'Đơn giá';
+                                                    return 'Unit Price';
                                                 })()
                                             }
                                             rules={[
-                                                { required: true, message: 'Bắt buộc' },
-                                                { type: 'number', min: 0, message: 'Phải >= 0' },
+                                                { required: true, message: 'Required' },
+                                                { type: 'number', min: 0, message: 'Must be >= 0' },
                                             ]}
                                         >
                                             <InputNumber
@@ -224,7 +224,7 @@ export default function POItemForm({ materials = [], poCurrency = 'VND', onTotal
                                         <Form.Item
                                             {...restField}
                                             name={[name, 'taxRate']}
-                                            label="Thuế (%)"
+                                            label="Tax (%)"
                                             initialValue={10}
                                         >
                                             <InputNumber
@@ -246,10 +246,10 @@ export default function POItemForm({ materials = [], poCurrency = 'VND', onTotal
                                         <Form.Item
                                             {...restField}
                                             name={[name, 'notes']}
-                                            label="Ghi chú dòng hàng"
+                                            label="Item Notes"
                                         >
                                             <Input
-                                                placeholder="VD: Yêu cầu đặc biệt, mã màu, phiên bản... (tùy chọn)"
+                                                placeholder="E.g., Special requests, color code, version... (optional)"
                                                 maxLength={500}
                                                 showCount
                                             />
@@ -261,13 +261,13 @@ export default function POItemForm({ materials = [], poCurrency = 'VND', onTotal
                                 <div style={{ background: '#f0f5ff', borderRadius: 6, padding: '6px 12px' }}>
                                     <Space size="large">
                                         <Text type="secondary" style={{ fontSize: 12 }}>
-                                            Tiền hàng: <strong>{formatAmount(netAmt, poCurrency)}</strong>
+                                            Subtotal: <strong>{formatAmount(netAmt, poCurrency)}</strong>
                                         </Text>
                                         <Text type="secondary" style={{ fontSize: 12 }}>
-                                            Thuế: <strong>{formatAmount(taxAmt, poCurrency)}</strong>
+                                            Tax: <strong>{formatAmount(taxAmt, poCurrency)}</strong>
                                         </Text>
                                         <Text style={{ fontSize: 13, color: '#1677ff' }}>
-                                            Thành tiền: <strong>{formatAmount(lineTotal, poCurrency)}</strong>
+                                            Total: <strong>{formatAmount(lineTotal, poCurrency)}</strong>
                                         </Text>
                                     </Space>
                                 </div>
@@ -283,7 +283,7 @@ export default function POItemForm({ materials = [], poCurrency = 'VND', onTotal
                             block
                             icon={<PlusOutlined />}
                         >
-                            Thêm vật tư
+                            Add materials
                         </Button>
                         <Form.ErrorList errors={errors} />
                     </Form.Item>

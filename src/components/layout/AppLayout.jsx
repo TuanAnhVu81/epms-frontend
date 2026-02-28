@@ -48,7 +48,7 @@ export default function AppLayout() {
                 key: 'logout',
                 danger: true,
                 icon: <LogoutOutlined />,
-                label: 'Đăng xuất',
+                label: 'Logout',
                 onClick: handleLogout,
             },
         ],
@@ -69,7 +69,7 @@ export default function AppLayout() {
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         boxShadow: '0 1px 4px rgba(0,21,41,.08)',
-                        zIndex: 1, // Đảm bảo shadow đè lên content
+                        zIndex: 1, // Ensure shadow overlaps content
                         position: 'sticky',
                         top: 0
                     }}
@@ -83,7 +83,7 @@ export default function AppLayout() {
                             fontSize: '16px',
                             width: 64,
                             height: 64,
-                            marginLeft: -24, // Dịch qua trái tí cho cân với padding
+                            marginLeft: -24, // Shift left to align with padding
                         }}
                     />
 
@@ -104,10 +104,10 @@ export default function AppLayout() {
                         minHeight: 280,
                         background: colorBgContainer,
                         borderRadius: borderRadiusLG,
-                        overflow: 'auto', // Đảm bảo content nếu dài thì scroll trong vùng này
+                        overflow: 'auto', // Ensure long content scrolls in this area
                     }}
                 >
-                    {/* Các router con sẽ render ở đây */}
+                    {/* Child routes render here */}
                     <Outlet />
                 </Content>
             </Layout>

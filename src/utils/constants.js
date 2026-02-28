@@ -11,9 +11,9 @@ export const PO_STATUS_CONFIG = {
 
 // VendorCategory → Display label
 export const VENDOR_CATEGORY_LABELS = {
-  DOMESTIC: 'Domestic (Trong nước)',
-  FOREIGN:  'Foreign (Nước ngoài)',
-  ONE_TIME: 'One-time (Vãng lai)',
+  DOMESTIC: 'Domestic (Domestic)',
+  FOREIGN:  'Foreign (Foreign)',
+  ONE_TIME: 'One-time (One-time)',
   SERVICE:  'Service Provider',
 };
 

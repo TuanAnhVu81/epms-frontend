@@ -66,7 +66,7 @@ export default function UserManagementPage() {
             setData(res?.content || []);
             setTotal(res?.totalElements || 0);
         } catch (err) {
-            message.error('Không thể tải danh sách nhân viên');
+            message.error('Failed to load employees');
         } finally {
             setLoading(false);
         }
@@ -94,19 +94,19 @@ export default function UserManagementPage() {
             if (formModal.record) {
                 // Edit: only update personal info
                 await updateUser(formModal.record.id, values);
-                message.success('Đã cập nhật thông tin nhân viên!');
+                message.success('Employee information updated!');
             } else {
                 // Create: username + role required
                 // Form field is 'role', but API expects 'roles' array
                 const payload = { ...values, roles: [values.role] };
                 await createUser(payload);
-                message.success('Đã tạo tài khoản! Mật khẩu mặc định: Welcome@123');
+                message.success('Account created! Default Password: Welcome@123');
             }
             setFormModal({ open: false, record: null });
             fetchUsers();
         } catch (err) {
             if (err?.errorFields) return;
-            message.error(err?.response?.data?.message || 'Lỗi khi lưu thông tin');
+            message.error(err?.response?.data?.message || 'Error saving info');
         } finally {
             setFormLoading(false);
         }
@@ -123,12 +123,12 @@ export default function UserManagementPage() {
             const values = await roleForm.validateFields();
             setRoleLoading(true);
             await updateUserRole(roleModal.record.id, { role: values.role });
-            message.success('Đã cập nhật Role!');
+            message.success('Role updated!');
             setRoleModal({ open: false, record: null });
             fetchUsers();
         } catch (err) {
             if (err?.errorFields) return;
-            message.error(err?.response?.data?.message || 'Lỗi khi cập nhật Role');
+            message.error(err?.response?.data?.message || 'Error updating role');
         } finally {
             setRoleLoading(false);
         }
@@ -139,10 +139,10 @@ export default function UserManagementPage() {
         try {
             const isActive = record.status === 'ACTIVE';
             await updateUserStatus(record.id, { active: !isActive });
-            message.success(!isActive ? 'Đã kích hoạt tài khoản!' : 'Đã vô hiệu hóa tài khoản!');
+            message.success(!isActive ? 'Account activated!' : 'Account deactivated!');
             fetchUsers();
         } catch (err) {
-            message.error(err?.response?.data?.message || 'Lỗi khi thay đổi trạng thái');
+            message.error(err?.response?.data?.message || 'Error changing status');
         }
     };
 
@@ -150,23 +150,23 @@ export default function UserManagementPage() {
     const handleResetPassword = async (id) => {
         try {
             await resetUserPassword(id);
-            message.success('Đã reset mật khẩu về Welcome@123!');
+            message.success('Password reset to Welcome@123!');
         } catch (err) {
-            message.error(err?.response?.data?.message || 'Lỗi khi reset mật khẩu');
+            message.error(err?.response?.data?.message || 'Error resetting password');
         }
     };
 
     // ── Table columns ────────────────────────────────────────────────────────
     const columns = [
         {
-            title: 'Tên đăng nhập',
+            title: 'Username',
             dataIndex: 'username',
             key: 'username',
             width: 150,
             render: (v) => <Text strong style={{ fontFamily: 'monospace', color: '#1677ff' }}>{v}</Text>,
         },
         {
-            title: 'Họ và tên',
+            title: 'Full Name',
             dataIndex: 'fullName',
             key: 'fullName',
             ellipsis: true,
@@ -187,17 +187,17 @@ export default function UserManagementPage() {
             )),
         },
         {
-            title: 'Đổi pass lần đầu',
+            title: 'First login change pass',
             dataIndex: 'requirePasswordChange',
             key: 'requirePasswordChange',
             width: 140,
             align: 'center',
             render: (v) => v
-                ? <Tag color="warning">⚠ Chưa đổi</Tag>
-                : <Tag color="success">✓ Đã đổi</Tag>,
+                ? <Tag color="warning">⚠ Not changed</Tag>
+                : <Tag color="success">✓ Changed</Tag>,
         },
         {
-            title: 'Trạng thái',
+            title: 'Status',
             dataIndex: 'status',
             key: 'status',
             width: 100,
@@ -207,7 +207,7 @@ export default function UserManagementPage() {
                 : <Badge status="default" text="Inactive" />,
         },
         {
-            title: 'Thao tác',
+            title: 'Actions',
             key: 'actions',
             width: 200,
             align: 'center',
@@ -217,36 +217,36 @@ export default function UserManagementPage() {
                 const isActive = record.status === 'ACTIVE';
 
                 if (isAdminAccount) {
-                    return <Text type="secondary" style={{ fontSize: 12 }}><i>System Account (Khóa)</i></Text>;
+                    return <Text type="secondary" style={{ fontSize: 12 }}><i>System Account (Locked)</i></Text>;
                 }
 
                 return (
                     <Space>
-                        <Tooltip title="Chỉnh sửa thông tin">
+                        <Tooltip title="Edit info">
                             <Button size="small" icon={<EditOutlined />} onClick={() => openFormModal(record)} />
                         </Tooltip>
-                        <Tooltip title="Đổi Role">
+                        <Tooltip title="Change Role">
                             <Button size="small" icon={<UserSwitchOutlined />} onClick={() => openRoleModal(record)} />
                         </Tooltip>
                         <Popconfirm
-                            title="Reset mật khẩu về Welcome@123?"
+                            title="Reset password to Welcome@123?"
                             onConfirm={() => handleResetPassword(record.id)}
                             okText="Reset"
-                            cancelText="Hủy"
+                            cancelText="Cancel"
                             okButtonProps={{ danger: true }}
                         >
-                            <Tooltip title="Reset Mật khẩu">
+                            <Tooltip title="Reset Password">
                                 <Button size="small" icon={<KeyOutlined />} />
                             </Tooltip>
                         </Popconfirm>
                         <Popconfirm
-                            title={isActive ? 'Vô hiệu hóa tài khoản?' : 'Kích hoạt lại tài khoản?'}
+                            title={isActive ? 'Deactivate account?' : 'Reactivate account?'}
                             onConfirm={() => handleToggleStatus(record)}
-                            okText="Xác nhận"
-                            cancelText="Hủy"
+                            okText="Confirm"
+                            cancelText="Cancel"
                             okButtonProps={{ danger: isActive }}
                         >
-                            <Tooltip title={isActive ? 'Vô hiệu hóa' : 'Kích hoạt'}>
+                            <Tooltip title={isActive ? 'Deactivate' : 'Active'}>
                                 <Button
                                     size="small"
                                     danger={isActive}
@@ -267,10 +267,10 @@ export default function UserManagementPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
                 <Title level={3} style={{ margin: 0 }}>
                     <TeamOutlined style={{ marginRight: 8, color: '#1677ff' }} />
-                    Quản lý Nhân viên
+                    User Management
                 </Title>
                 <Button type="primary" icon={<PlusOutlined />} onClick={() => openFormModal()}>
-                    Tạo tài khoản mới
+                    Create new account
                 </Button>
             </div>
 
@@ -279,7 +279,7 @@ export default function UserManagementPage() {
                 <Row gutter={[12, 12]} align="middle">
                     <Col xs={24} sm={12} md={8}>
                         <Search
-                            placeholder="Tìm theo tên đăng nhập, email..."
+                            placeholder="Search by username, email..."
                             value={keyword}
                             onChange={(e) => setKeyword(e.target.value)}
                             onSearch={() => { setPage(0); fetchUsers(); }}
@@ -291,7 +291,7 @@ export default function UserManagementPage() {
                             value={filterRole}
                             onChange={(v) => { setFilterRole(v); setPage(0); }}
                             style={{ width: '100%' }}
-                            placeholder="Lọc theo Role"
+                            placeholder="Filter by Role"
                             allowClear
                         >
                             <Option value="ROLE_ADMIN">Admin</Option>
@@ -301,7 +301,7 @@ export default function UserManagementPage() {
                     </Col>
                     <Col>
                         <Button icon={<ReloadOutlined />} onClick={() => { setKeyword(''); setFilterRole(null); setPage(0); }}>
-                            Làm mới
+                            Refresh
                         </Button>
                     </Col>
                 </Row>
@@ -320,7 +320,7 @@ export default function UserManagementPage() {
                         pageSize,
                         total,
                         showSizeChanger: true,
-                        showTotal: (t) => `Tổng: ${t} tài khoản`,
+                        showTotal: (t) => `Total:  accounts`,
                         onChange: (p, ps) => { setPage(p - 1); setPageSize(ps); },
                     }}
                 />
@@ -328,12 +328,12 @@ export default function UserManagementPage() {
 
             {/* ══ Create / Edit Modal ═════════════════════════════════════════ */}
             <Modal
-                title={formModal.record ? '✏️ Chỉnh sửa thông tin nhân viên' : '➕ Tạo tài khoản mới'}
+                title={formModal.record ? '✏️ Edit info employees' : '➕ Create new account'}
                 open={formModal.open}
                 onCancel={() => { setFormModal({ open: false, record: null }); form.resetFields(); }}
                 onOk={handleFormSubmit}
-                okText={formModal.record ? 'Lưu thay đổi' : 'Tạo tài khoản'}
-                cancelText="Hủy"
+                okText={formModal.record ? 'Save Changes' : 'Create account'}
+                cancelText="Cancel"
                 confirmLoading={formLoading}
                 width={600}
                 destroyOnClose
@@ -341,7 +341,7 @@ export default function UserManagementPage() {
                 <Divider style={{ margin: '12px 0' }} />
                 {!formModal.record && (
                     <div style={{ marginBottom: 16, padding: '8px 12px', background: '#fffbe6', borderRadius: 8, border: '1px solid #ffe58f' }}>
-                        💡 Tài khoản mới sẽ có mật khẩu mặc định là <strong>Welcome@123</strong>. Nhân viên sẽ được yêu cầu đổi mật khẩu khi đăng nhập lần đầu.
+                        💡 New accounts will have a default password of <strong>Welcome@123</strong>. Employees will be required to change their password on first login.
                     </div>
                 )}
                 <Form form={form} layout="vertical" scrollToFirstError>
@@ -352,10 +352,10 @@ export default function UserManagementPage() {
                                 <Col xs={24} md={12}>
                                     <Form.Item
                                         name="username"
-                                        label="Tên đăng nhập"
+                                        label="Username"
                                         rules={[
-                                            { required: true, message: 'Nhập tên đăng nhập' },
-                                            { min: 3, message: 'Ít nhất 3 ký tự' },
+                                            { required: true, message: 'Enter username' },
+                                            { min: 3, message: 'At least 3 characters' },
                                         ]}
                                     >
                                         <Input placeholder="vd: nguyen.van.a" />
@@ -364,27 +364,27 @@ export default function UserManagementPage() {
                                 <Col xs={24} md={12}>
                                     <Form.Item
                                         name="role"
-                                        label="Phân quyền"
-                                        rules={[{ required: true, message: 'Chọn Role' }]}
+                                        label="Privileges"
+                                        rules={[{ required: true, message: 'Select Role' }]}
                                     >
-                                        <Select placeholder="Chọn Role...">
-                                            <Option value="ROLE_EMPLOYEE">Employee (Nhân viên)</Option>
-                                            <Option value="ROLE_MANAGER">Manager (Quản lý)</Option>
+                                        <Select placeholder="Select Role...">
+                                            <Option value="ROLE_EMPLOYEE">Employee (employees)</Option>
+                                            <Option value="ROLE_MANAGER">Manager (Manager)</Option>
                                         </Select>
                                     </Form.Item>
                                 </Col>
                             </>
                         )}
                         <Col xs={24} md={12}>
-                            <Form.Item name="fullName" label="Họ và tên">
-                                <Input placeholder="Nguyễn Văn A" />
+                            <Form.Item name="fullName" label="Full Name">
+                                <Input placeholder="John Doe" />
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
                             <Form.Item
                                 name="email"
                                 label="Email"
-                                rules={[{ type: 'email', message: 'Email không hợp lệ' }, { required: true, message: 'Vui lòng nhập Email' }]}
+                                rules={[{ type: 'email', message: 'Invalid Email' }, { required: true, message: 'Please enter Email' }]}
                             >
                                 <Input placeholder="nva@company.com" />
                             </Form.Item>
@@ -395,12 +395,12 @@ export default function UserManagementPage() {
 
             {/* ══ Role Update Modal ═══════════════════════════════════════════ */}
             <Modal
-                title={<><UserSwitchOutlined style={{ color: '#1677ff', marginRight: 6 }} />Thay đổi Role: <strong>{roleModal.record?.username}</strong></>}
+                title={<><UserSwitchOutlined style={{ color: '#1677ff', marginRight: 6 }} />Change Role: <strong>{roleModal.record?.username}</strong></>}
                 open={roleModal.open}
                 onCancel={() => { setRoleModal({ open: false, record: null }); roleForm.resetFields(); }}
                 onOk={handleRoleSubmit}
-                okText="Cập nhật Role"
-                cancelText="Hủy"
+                okText="Update Role"
+                cancelText="Cancel"
                 confirmLoading={roleLoading}
                 width={400}
                 destroyOnClose
@@ -409,12 +409,12 @@ export default function UserManagementPage() {
                 <Form form={roleForm} layout="vertical">
                     <Form.Item
                         name="role"
-                        label="Role mới"
-                        rules={[{ required: true, message: 'Chọn Role' }]}
+                        label="New Role"
+                        rules={[{ required: true, message: 'Select Role' }]}
                     >
                         <Select>
-                            <Option value="ROLE_EMPLOYEE">Employee (Nhân viên)</Option>
-                            <Option value="ROLE_MANAGER">Manager (Quản lý)</Option>
+                            <Option value="ROLE_EMPLOYEE">Employee (employees)</Option>
+                            <Option value="ROLE_MANAGER">Manager (Manager)</Option>
                         </Select>
                     </Form.Item>
                 </Form>

@@ -2,20 +2,20 @@ import { message } from 'antd';
 
 // Map business error codes from backend → Vietnamese user-friendly messages
 const ERROR_MESSAGES = {
-  1001: 'Dữ liệu không hợp lệ.',
-  1002: 'Tên đăng nhập đã tồn tại.',
-  1003: 'Tên đăng nhập phải có ít nhất 3 ký tự.',
-  1004: 'Mật khẩu phải có ít nhất 6 ký tự.',
-  1005: 'Người dùng không tồn tại.',
-  1007: 'Bạn không có quyền thực hiện thao tác này.',
-  1008: 'Sai tên đăng nhập hoặc mật khẩu.',
-  2001: 'Không tìm thấy nhà cung cấp.',
-  2002: 'Mã nhà cung cấp đã tồn tại.',
-  2003: 'Điểm đánh giá phải từ 1.0 đến 5.0.',
-  2004: 'Mã số thuế đã tồn tại.',
-  2101: 'Không tìm thấy vật tư.',
-  2102: 'Mã vật tư đã tồn tại.',
-  9999: 'Lỗi hệ thống, vui lòng thử lại.',
+  1001: 'Invalid data.',
+  1002: 'Username already exists.',
+  1003: 'Username must have at least 3 characters.',
+  1004: 'Password must have at least 6 characters.',
+  1005: 'User does not exist.',
+  1007: "You don't have permission to perform this action.",
+  1008: 'Incorrect username or password.',
+  2001: 'Vendor not found.',
+  2002: 'Vendor code already exists.',
+  2003: 'Rating must be between 1.0 and 5.0.',
+  2004: 'Tax ID already exists.',
+  2101: 'Material not found.',
+  2102: 'Material code already exists.',
+  9999: 'System Error, please try again.',
 };
 
 // Show an error message toast based on the API error response
@@ -30,7 +30,7 @@ export function handleApiError(error) {
     msg = data.message;
   } else {
     // Use mapped Vietnamese message if exists, otherwise fallback to BE message or generic
-    msg = ERROR_MESSAGES[code] || data?.message || 'Đã xảy ra lỗi, vui lòng thử lại.';
+    msg = ERROR_MESSAGES[code] || data?.message || 'An error occurred, please try again.';
   }
 
   message.error(msg);

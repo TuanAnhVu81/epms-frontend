@@ -17,7 +17,7 @@ export default function ChangePasswordPage() {
 
     const onFinish = async (values) => {
         if (values.newPassword !== values.confirmPassword) {
-            message.error('Mật khẩu xác nhận không khớp!');
+            message.error('Passwords do not match!');
             return;
         }
         try {
@@ -27,11 +27,11 @@ export default function ChangePasswordPage() {
                 newPassword: values.newPassword,
                 confirmPassword: values.confirmPassword,
             });
-            message.success('Đổi mật khẩu thành công! Vui lòng đăng nhập lại.');
+            message.success('Password changed successfully! Please login again.');
             // Force logout so user logs in fresh with new password (clears requirePasswordChange flag)
             setTimeout(() => { logout(); navigate('/login', { replace: true }); }, 1500);
         } catch (err) {
-            message.error(err?.response?.data?.message || 'Lỗi khi đổi mật khẩu');
+            message.error(err?.response?.data?.message || 'Failed to change password');
         } finally {
             setLoading(false);
         }
@@ -46,19 +46,19 @@ export default function ChangePasswordPage() {
                         <SafetyCertificateOutlined style={{ fontSize: 32, color: '#fff' }} />
                     </div>
                     <Title level={3} style={{ marginTop: 12, marginBottom: 4 }}>
-                        Đổi mật khẩu lần đầu
+                        First Time Change Password
                     </Title>
                     <Text type="secondary">
-                        Tài khoản <strong>{user?.username}</strong> đang sử dụng mật khẩu mặc định.<br />
-                        Vui lòng đặt mật khẩu mới để tiếp tục sử dụng hệ thống.
+                        Account <strong>{user?.username}</strong> is using default password.<br />
+                        Please set a new password to continue using the system.
                     </Text>
                 </div>
 
                 <Alert
                     type="warning"
                     showIcon
-                    message="Bắt buộc đổi mật khẩu"
-                    description="Đây là lần đăng nhập đầu tiên của bạn. Mật khẩu mặc định là Welcome@123. Hãy đặt mật khẩu mới an toàn hơn."
+                    message="Password Change Required"
+                    description="This is your first login. Default password is Welcome@123. Please set a more secure password."
                     style={{ marginBottom: 24 }}
                 />
 
@@ -66,45 +66,45 @@ export default function ChangePasswordPage() {
                     {/* Old Password (default: Welcome@123) */}
                     <Form.Item
                         name="oldPassword"
-                        label="Mật khẩu hiện tại (mặc định)"
-                        rules={[{ required: true, message: 'Nhập mật khẩu hiện tại' }]}
+                        label="Current Password (Default)"
+                        rules={[{ required: true, message: 'Enter current password' }]}
                     >
                         <Input.Password
                             prefix={<LockOutlined />}
-                            placeholder="Mật khẩu mặc định: Welcome@123"
+                            placeholder="Default Password: Welcome@123"
                         />
                     </Form.Item>
 
                     {/* New Password */}
                     <Form.Item
                         name="newPassword"
-                        label="Mật khẩu mới"
+                        label="New Password"
                         rules={[
-                            { required: true, message: 'Nhập mật khẩu mới' },
-                            { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' },
+                            { required: true, message: 'Enter password...i' },
+                            { min: 6, message: 'Password must have at least 6 characters' },
                         ]}
                     >
                         <Input.Password
                             prefix={<LockOutlined />}
-                            placeholder="Ít nhất 6 ký tự"
+                            placeholder="At least 6 characters"
                         />
                     </Form.Item>
 
                     {/* Confirm Password */}
                     <Form.Item
                         name="confirmPassword"
-                        label="Xác nhận mật khẩu mới"
-                        rules={[{ required: true, message: 'Nhập lại mật khẩu mới' }]}
+                        label="Confirm New Password"
+                        rules={[{ required: true, message: 'Re-enter new password' }]}
                     >
                         <Input.Password
                             prefix={<LockOutlined />}
-                            placeholder="Nhập lại mật khẩu mới"
+                            placeholder="Re-enter new password"
                         />
                     </Form.Item>
 
                     <Form.Item>
                         <Button type="primary" htmlType="submit" block loading={loading}>
-                            Xác nhận đổi mật khẩu
+                            Confirm Change Password
                         </Button>
                     </Form.Item>
                 </Form>
