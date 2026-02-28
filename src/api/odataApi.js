@@ -53,6 +53,35 @@ export const queryMaterialsOData = async (queryParams) => {
 };
 
 /**
+ * Fetch ALL active vendors for dropdown/select components.
+ * Uses OData $filter=status eq 'ACTIVE' with large $top to load entire list.
+ * Replaces the old REST getVendors({ page: 0, size: 200 }) call.
+ *
+ * @returns {Promise<Array>} flat array of vendor objects
+ */
+export const fetchAllVendorsForDropdown = async () => {
+    const response = await axiosClient.get(
+        `${ODATA_BASE}/Vendors?$top=500&$orderby=name asc&$filter=status eq 'ACTIVE'`
+    );
+    // OData wraps data in { value: [...] }
+    return response.data?.value ?? [];
+};
+
+/**
+ * Fetch ALL active materials for dropdown/select components.
+ * Uses OData $filter=isActive eq true with large $top to load entire list.
+ * Replaces the old REST getActiveMaterials({ page: 0, size: 500 }) call.
+ *
+ * @returns {Promise<Array>} flat array of material objects
+ */
+export const fetchAllActiveMaterialsForDropdown = async () => {
+    const response = await axiosClient.get(
+        `${ODATA_BASE}/Materials?$top=1000&$orderby=description asc&$filter=isActive eq true`
+    );
+    return response.data?.value ?? [];
+};
+
+/**
  * Get OData service metadata (EDMX XML).
  * Useful for debugging or displaying available entity sets.
  */

@@ -7,8 +7,7 @@ import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { getPurchaseOrderById, updatePurchaseOrder } from '../api/purchaseOrderApi';
-import { getVendors } from '../api/vendorApi';
-import { getActiveMaterials } from '../api/materialApi';
+import { fetchAllVendorsForDropdown, fetchAllActiveMaterialsForDropdown } from '../api/odataApi';
 import POItemForm from '../components/po/POItemForm';
 
 const { Title, Text } = Typography;
@@ -37,14 +36,15 @@ export default function POEditPage() {
                 setLoadingData(true);
 
                 // Load PO details + dropdowns in parallel
-                const [vendorRes, matRes, poRes] = await Promise.all([
-                    getVendors({ page: 0, size: 200 }),
-                    getActiveMaterials({ page: 0, size: 500 }),
+                const [vendors, materials, poRes] = await Promise.all([
+                    fetchAllVendorsForDropdown(),
+                    fetchAllActiveMaterialsForDropdown(),
                     getPurchaseOrderById(id),
                 ]);
 
-                setVendors(vendorRes?.content || []);
-                setMaterials(matRes?.content || []);
+                // OData returns flat array directly (no .content wrapper)
+                setVendors(vendors);
+                setMaterials(materials);
 
                 // Populate form with existing PO data
                 if (poRes) {

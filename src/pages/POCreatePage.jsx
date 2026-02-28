@@ -7,8 +7,7 @@ import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { createPurchaseOrder } from '../api/purchaseOrderApi';
-import { getVendors } from '../api/vendorApi';
-import { getActiveMaterials } from '../api/materialApi';
+import { fetchAllVendorsForDropdown, fetchAllActiveMaterialsForDropdown } from '../api/odataApi';
 import POItemForm from '../components/po/POItemForm';
 
 const { Title, Text } = Typography;
@@ -33,12 +32,13 @@ export default function POCreatePage() {
     useEffect(() => {
         const loadDropdowns = async () => {
             try {
-                const [vendorRes, matRes] = await Promise.all([
-                    getVendors({ page: 0, size: 200 }),
-                    getActiveMaterials({ page: 0, size: 500 }),
+                const [vendors, materials] = await Promise.all([
+                    fetchAllVendorsForDropdown(),
+                    fetchAllActiveMaterialsForDropdown(),
                 ]);
-                setVendors(vendorRes?.content || []);
-                setMaterials(matRes?.content || []);
+                // OData returns flat array directly (no .content wrapper)
+                setVendors(vendors);
+                setMaterials(materials);
             } catch (err) {
                 console.error('Failed to load dropdowns:', err);
                 message.error('Không thể tải danh sách Nhà cung cấp / Vật tư');

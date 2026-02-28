@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Input, Select, Tag, Popconfirm, message, Space, Typography, Card, Tooltip, Modal } from 'antd';
 import {
-    SearchOutlined, EyeOutlined, CheckCircleOutlined, CloseCircleOutlined
+    EyeOutlined, CheckCircleOutlined, CloseCircleOutlined, ThunderboltOutlined, ReloadOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import {
-    getPurchaseOrders,
-    searchPurchaseOrders,
-    getPurchaseOrdersByStatus,
     approvePurchaseOrder,
     rejectPurchaseOrder
 } from '../api/purchaseOrderApi';
+import { queryPurchaseOrdersOData } from '../api/odataApi';
 import { PO_STATUS_CONFIG } from '../utils/constants';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
@@ -27,28 +25,24 @@ export default function ApprovalPage() {
     const [statusFilter, setStatusFilter] = useState('PENDING'); // Default to PENDING for approvals
     const [searchKeyword, setSearchKeyword] = useState('');
 
+    const [sorter, setSorter] = useState(null); // { field, order }
+
     const [isRejectModalOpen, setRejectModalOpen] = useState(false);
     const [rejectId, setRejectId] = useState(null);
     const [rejectReason, setRejectReason] = useState('');
 
-    const fetchPOs = async (page = 1, size = 10, status = null, keyword = '') => {
+    const fetchPOs = async ({ page = pagination.current, size = pagination.pageSize, status = statusFilter, keyword = searchKeyword, sort = sorter } = {}) => {
         try {
             setLoading(true);
-            let res;
-            const params = { page: page - 1, size };
-
-            if (keyword) {
-                res = await searchPurchaseOrders(keyword, params);
-            } else if (status) {
-                res = await getPurchaseOrdersByStatus(status, params);
-            } else {
-                res = await getPurchaseOrders(params);
-            }
-
-            if (res) {
-                setData(res.content || []);
-                setTotal(res.totalElements || 0);
-            }
+            const { data: resData, total: totalCount } = await queryPurchaseOrdersOData({
+                page,
+                pageSize: size,
+                statusFilter: status || null,
+                keyword: keyword || '',
+                sort,
+            });
+            setData(resData);
+            setTotal(totalCount);
         } catch (error) {
             console.error('Error fetching POs:', error);
             message.error('Không thể tải danh sách Đơn mua hàng để duyệt');
@@ -58,25 +52,33 @@ export default function ApprovalPage() {
     };
 
     useEffect(() => {
-        fetchPOs(pagination.current, pagination.pageSize, statusFilter, searchKeyword);
+        fetchPOs({ page: pagination.current, size: pagination.pageSize, status: statusFilter, keyword: searchKeyword, sort: sorter });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pagination.current, pagination.pageSize, statusFilter]);
+    }, [pagination.current, pagination.pageSize, statusFilter, sorter]);
 
     const handleSearch = (value) => {
         setSearchKeyword(value);
-        setPagination({ ...pagination, current: 1 });
-        fetchPOs(1, pagination.pageSize, statusFilter, value);
+        setPagination((prev) => ({ ...prev, current: 1 }));
+        // Pass value explicitly — DO NOT rely on searchKeyword state here
+        // State update is async so searchKeyword would still be the OLD value
+        // when fetchPOs reads it from its default params
+        fetchPOs({ page: 1, size: pagination.pageSize, status: statusFilter, keyword: value, sort: sorter });
     };
 
-    const handleTableChange = (pag) => {
+    const handleTableChange = (pag, filters, currentSorter) => {
         setPagination({ current: pag.current, pageSize: pag.pageSize });
+        if (currentSorter && currentSorter.field && currentSorter.order) {
+            setSorter({ field: currentSorter.field, order: currentSorter.order });
+        } else {
+            setSorter(null);
+        }
     };
 
     const handleApprove = async (id) => {
         try {
             await approvePurchaseOrder(id);
             message.success('Đã duyệt đơn mua hàng thành công!');
-            fetchPOs(pagination.current, pagination.pageSize, statusFilter, searchKeyword);
+            fetchPOs({ page: pagination.current, size: pagination.pageSize, status: statusFilter, keyword: searchKeyword, sort: sorter });
         } catch (error) {
             message.error('Lỗi khi duyệt đơn hàng');
         }
@@ -109,12 +111,14 @@ export default function ApprovalPage() {
             title: 'Mã PO',
             dataIndex: 'poNumber',
             key: 'poNumber',
+            sorter: true,
             render: (text) => <strong>{text}</strong>,
         },
         {
             title: 'Nhà cung cấp',
             dataIndex: 'vendorName',
             key: 'vendorName',
+            sorter: true,
         },
         {
             title: 'Người tạo',
@@ -125,6 +129,7 @@ export default function ApprovalPage() {
             title: 'Ngày đặt',
             dataIndex: 'orderDate',
             key: 'orderDate',
+            sorter: true,
         },
         {
             title: 'Trạng thái',
@@ -196,9 +201,27 @@ export default function ApprovalPage() {
         },
     ];
 
+    // Build live OData $filter string for visual display in toolbar
+    // Same pattern as MaterialPage — helps HR/interviewer see OData in action
+    const liveFilterDisplay = (() => {
+        const parts = [];
+        if (statusFilter) parts.push(`status eq '${statusFilter}'`);
+        if (searchKeyword && searchKeyword.trim())
+            parts.push(`contains(poNumber, '${searchKeyword.trim()}')`);
+        return parts.join(' and ');
+    })();
+
     return (
         <div style={{ padding: '0 12px' }}>
-            <Title level={3} style={{ marginBottom: 24, padding: 0 }}>Duyệt Đơn Mua Hàng (Approvals)</Title>
+            <div style={{ marginBottom: 24 }}>
+                <Title level={3} style={{ margin: 0, padding: 0 }}>Duyệt Đơn Mua Hàng (Approvals)</Title>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                    <ThunderboltOutlined style={{ color: '#faad14', marginRight: 4 }} />
+                    Powered by&nbsp;
+                    <Text code style={{ fontSize: 11 }}>OData V4</Text>
+                    &nbsp;— Hỗ trợ tìm kiếm, lọc, sắp xếp phía Server
+                </Text>
+            </div>
 
             <Card bordered={false} style={{ marginBottom: 16 }}>
                 <Space style={{ marginBottom: 16 }} wrap>
@@ -225,6 +248,25 @@ export default function ApprovalPage() {
                             </Option>
                         ))}
                     </Select>
+
+                    {/* Reload button */}
+                    <Tooltip title="Làm mới">
+                        <Button
+                            icon={<ReloadOutlined />}
+                            onClick={() => fetchPOs()}
+                            loading={loading}
+                        />
+                    </Tooltip>
+
+                    {/* Live OData $filter display — shows exact query string sent to backend */}
+                    {liveFilterDisplay && (
+                        <Text
+                            type="secondary"
+                            style={{ fontSize: 11, fontFamily: 'monospace', color: '#8c8c8c' }}
+                        >
+                            $filter={liveFilterDisplay}
+                        </Text>
+                    )}
                 </Space>
 
                 <Table
